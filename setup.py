@@ -21,9 +21,10 @@ setup(
     license='GPLv3',
     keywords=['automation', 'cron', 'trigger', 'triggering'],
     py_modules=['triggerd'],
+    scripts=['triggerd.sh'],
     entry_points={
         'console_scripts': [
-            'subsystem=triggerd:main'],
+            'triggerd=triggerd:main'],
     },
     classifiers=[
         'Development Status :: 4 - Beta',
