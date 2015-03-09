@@ -9,6 +9,17 @@ triggerd is perfect for querying a webpage for matching text or anything of the 
 
 The script was originally written in Bash shell script, a copy of which is included in this repository as ``triggerd.sh``. It is nearly syntactically identical to the Python version (it only lacks the --verbose option). It is a great alternative if Python 3 is not available in your environment.
 
+Installation
+============
+
+The easiest way to install triggerd is via pip (assuming it is installed).
+
+::
+
+  pip3 install --user triggerd
+
+FYI: The shell version of triggerd will be included in your local bin folder as ``triggerd.sh``
+
 Usage
 ===========
 
