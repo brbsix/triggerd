@@ -3,6 +3,10 @@
 # Trigger an event or notification upon the output of a command
 
 
+CONFIG="$HOME/.config/scripts/${0##*/}/triggers.conf"
+DEFAULT_TRIGGER='notify-send --icon=notification-message-im --urgency=critical "triggerd: $EVENT_NAME" "We have a trigger event!"'
+
+
 error(){
     echo "ERROR: $@" >&2
 }
@@ -26,20 +30,24 @@ prepare_trigger(){
     if [[ -n ${event[TRIGGER_CUSTOM]} ]]; then
         event[trigger]=${event[TRIGGER_CUSTOM]}
     elif [[ -n ${event[TRIGGER_NAMED]} ]]; then
-        if [[ ! -f $config ]]; then
-            warning "TRIGGER_NAMED must be defined in '$config'"
-        elif [[ ! -r $config ]]; then
-            warning "No read access to '$config'"
+        if [[ ! -f $CONFIG ]]; then
+            warning "TRIGGER_NAMED must be defined in '$CONFIG'"
+        elif [[ ! -r $CONFIG ]]; then
+            warning "No read access to '$CONFIG'"
         else
-            event[trigger]=$(bash-config "$config" "${event[TRIGGER_NAMED]}" 2>/dev/null)
-            [[ -z ${event[trigger]} ]] && warning "TRIGGER_NAMED '${event[TRIGGER_NAMED]}' not defined in '$config' for '$event_file'"
+            if hash bash-config 2>/dev/null; then
+                event[trigger]=$(bash-config "$CONFIG" "${event[TRIGGER_NAMED]}" 2>/dev/null)
+            else
+                event[trigger]=$(sed -n "s/^${event[TRIGGER_NAMED]}\ *=\ *//p" "$CONFIG" 2>/dev/null)
+            fi
+            [[ -z ${event[trigger]} ]] && warning "TRIGGER_NAMED '${event[TRIGGER_NAMED]}' not defined in '$CONFIG' for '$event_file'"
         fi
     fi
 
     if [[ -z ${event[trigger]} ]]; then
         trigger_type=default
-        event[trigger]=$default_trigger
-        warning "WARNING: Resorting to default trigger"
+        event[trigger]=$DEFAULT_TRIGGER
+        warning "Resorting to default trigger"
     fi
 }
 
@@ -86,16 +94,15 @@ verify_event(){
 
     prepare_trigger
 
-    [[ $flag_error = true ]] && return 1
+    if [[ $flag_error = true ]]; then
+        return 1
+    fi
 }
 
 warning(){
     echo "WARNING: $@" >&2
 }
 
-
-config="$HOME/.config/scripts/${0##*/}/triggers.conf"
-default_trigger='notify-send --icon=notification-message-im --urgency=critical "triggerd: ${event[EVENT_NAME]}" "We have a trigger event!"'
 
 if (( $# == 0 )); then
     error "Please indicate target event files and/or directories"
@@ -145,7 +152,7 @@ for event_file in "${events[@]}"; do
 
     # execute event command
     event[command_output]=$(${event[COMMAND]} 2>/dev/null)
-    event[status]=$?
+    event[exit]=$?
 
     # compare command output with match content (per match criteria)
     if [[ ${event[TEST_TYPE]} = arithmetic ]]; then
@@ -177,7 +184,7 @@ for event_file in "${events[@]}"; do
             [[ -n ${event[command_output]} ]] && event[triggered]=true
         fi
     elif [[ ${event[TEST_TYPE]} = status ]]; then
-        eval [[ ${event[status]} -${event[MATCH_CRITERIA]} ${event[MATCH_CONTENT]} ]] && event[triggered]=true
+        eval [[ ${event[exit]} -${event[MATCH_CRITERIA]} ${event[MATCH_CONTENT]} ]] && event[triggered]=true
     fi
 
     [[ ${event[triggered]} != true ]] && continue
@@ -186,10 +193,14 @@ for event_file in "${events[@]}"; do
 
     if (( $? != 0 )) && [[ ${event[trigger_type]} != default ]]; then
         error "Trigger event for event file '${event[FILENAME]}' returned a nonzero exit code. Executing default trigger..."
-        eval "$default_trigger" >/dev/null 2>&1
+        eval "$DEFAULT_TRIGGER" >/dev/null 2>&1
     fi
 
-    bash-config "$event_file" STATUS triggered 2>/dev/null
+    if hash bash-config 2>/dev/null;
+        bash-config "$event_file" STATUS triggered 2>/dev/null
+    else
+        sed -i 's/STATUS=enabled/STATUS=triggered/;s/STATUS = enabled/STATUS = triggered/' "$event_file"
+    fi
     
     if (( $? != 0 )); then
         error "Problem updating the event file '${event[FILENAME]}' after trigger event"
