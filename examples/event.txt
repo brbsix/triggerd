@@ -1,0 +1,38 @@
+# TEST_TYPE options:
+# * arithmetic
+# * content
+# * status (exit code)
+
+# MATCH_CRITERIA for arithmetic and status tests:
+# * eq
+# * ge
+# * gt
+# * le
+# * lt
+# * ne
+
+# MATCH_CRITERIA for content tests:
+# * contains
+# * does_not_contain
+# * matches
+# * does_not_match
+# * null
+# * not_null
+
+# STATUS indicates whether the event is active:
+# * enabled
+# * disabled
+# * triggered (this will be set by triggerd upon a trigger event)
+
+# TRIGGER_CUSTOM is used to indicate a shell command
+
+# TRIGGER_NAMED is used to indicate the name of a trigger template
+# stored in ~/.config/scripts/triggerd/triggers.conf
+
+COMMAND=curl -s google.com | grep -q google
+EVENT_NAME=Google
+MATCH_CONTENT=0
+MATCH_CRITERIA=eq
+STATUS=enabled
+TEST_TYPE=status
+TRIGGER_CUSTOM=notify-send "$EVENT_NAME is alive!"
