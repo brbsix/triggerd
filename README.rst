@@ -27,14 +27,13 @@ triggerd is controlled via configuration files called event files. You can execu
 
 ::
 
-  triggerd FILE1 FILE2 FILE3
+  triggerd FILE1 FILE2 FILE3...
 
 Or against entire directories of event files:
 
 ::
 
-  triggerd DIRECTORY
-
+  triggerd EVENTFOLDER1 EVENTFOLDER2...
 
 You can test your event file configuration without actually executing it:
 
@@ -64,7 +63,7 @@ Here is a sample event file:
   TEST_TYPE=status
   TRIGGER_CUSTOM=notify-send "Google is alive!"
 
-**TEST_TYPES** options:
+**TEST_TYPE** options:
 
 ::
 
@@ -90,8 +89,12 @@ Here is a sample event file:
 
   contains
   does_not_contain
-  does_not_match
+
   matches
+  does_not_match
+
+  null
+  not_null
 
 **STATUS** indicates whether the event is active:
 
@@ -104,12 +107,25 @@ Here is a sample event file:
 Triggers
 ========
 
-Triggers may be specified in the event file via ``TRIGGER_CUSTOM`` for the exact shell command to execute.
+There are two types of triggers available.
 
-Trigger may also be specified via ``TRIGGER_NAMED`` for the name of a trigger template.
+``TRIGGER_CUSTOM`` is used to indicate a shell command.
 
-i.e. ``TRIGGER_NAMED=special``
+i.e. ``TRIGGER_CUSTOM=notify-send "Trigger Notification"
+
+``TRIGGER_NAMED`` is used to indicate a trigger template.
 
 The trigger templates may be defined in ``$HOME/.config/scripts/triggerd/triggers.conf``
 
-ie. ``special=notify-send --icon=$HOME/.config/scripts/triggerd/icons/special.png --urgency=critical "triggerd: $EVENT_NAME" "special event was triggered!"``
+ie. ``special=notify-send --icon=~/.config/scripts/triggerd/icons/special.png --urgency=critical "triggerd: $EVENT_NAME" "special event was triggered!"``
+
+The event name can be used in either trigger as ``$EVENT_NAME``.
+
+If no trigger is indicated, a default notification will be displayed via notify-send.
+
+License
+=======
+
+Copyright (c) 2015 Six (brbsix@gmail.com).
+
+Licensed under the GPLv3 license.
