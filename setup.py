@@ -19,9 +19,10 @@ setup(
     long_description=read('README.rst'),
     url='https://github.com/brbsix/triggerd',
     license='GPLv3',
-    keywords=['automation', 'cron', 'trigger', 'triggering'],
+    keywords=['automation', 'cron', 'monitoring', 'trigger', 'triggering'],
     py_modules=['triggerd'],
-    scripts=['triggerd.sh'],
+    scripts=['scripts/bash-config', 'scripts/triggerd.sh'],
+    data_files=['examples/event.txt', 'examples/triggers.conf']
     entry_points={
         'console_scripts': [
             'triggerd=triggerd:main'],
@@ -31,7 +32,10 @@ setup(
         'Environment :: Console',
         'Intended Audience :: Developers',
         'Intended Audience :: End Users/Desktop',
+        'Intended Audience :: Information Technology',
+        'Intended Audience :: System Administrators',
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+        'Natural Language :: English',
         'Operating System :: POSIX',
         'Operating System :: POSIX :: Linux',
         'Programming Language :: Python :: 3',
@@ -41,6 +45,11 @@ setup(
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3 :: Only',
+        'Programming Language :: Unix Shell',
+        'Topic :: Home Automation',
+        'Topic :: System',
+        'Topic :: System :: Monitoring',
+        'Topic :: System :: Systems Administration',
         'Topic :: Utilities',
     ],
 )
