@@ -9,20 +9,25 @@ __version__ = '0.1'
 
 class Config:
     """Store global script configuration values."""
-    events = []
+    debug = False
     verbose = False
     verify = False
+
+    events = []
+    file = None
 
 
 class Event:
     """Store per-event configuration details."""
-    def __init__(self, file):
+    def __init__(self, filename):
         self.exit = None
-        self.file = file
         self.output = None
         self.skip = False
 
-        self.loader = ConfigObj(file)
+        self.basename = os.path.basename(filename)
+        self.file = filename
+
+        self.loader = ConfigObj(filename)
         self.COMMAND = self.loader.get('COMMAND')
         self.EVENT_NAME = self.loader.get('EVENT_NAME')
         self.MATCH_CONTENT = self.loader.get('MATCH_CONTENT')
@@ -33,48 +38,59 @@ class Event:
         self.TRIGGER_NAMED = self.loader.get('TRIGGER_NAMED')
 
         if Config.verify:
+            eventlog.info("Verifying only", extra=self.__dict__)
             self.verify()
             self.skip = True
-        elif self.STATUS != 'enabled' or not self.verify():
+        elif self.STATUS != 'enabled':
+            eventlog.info("Not enabled (skipping)", extra=self.__dict__)
+            self.skip = True
+        elif not self.verify():
+            eventlog.info("Failed verification (skipping)", extra=self.__dict__)
             self.skip = True
 
     def _contains(self, match, content):
         """content contains match (match in content)."""
         test_result = match in content
-        log(self.file, "(content test)    '%s' in '%s' => %s" % (match, content, test_result))
+        eventlog.info("CONTENT TEST | '{0}' in '{1}' => {2}".format(match, content, test_result),
+                      extra=self.__dict__)
         return test_result
 
     def _matches(self, match, content):
         """match matches content (match == content)."""
         test_result = match == content
-        log(self.file, "(content test)    '%s' matches '%s' => %s" % (match, content, test_result))
+        eventlog.info("CONTENT TEST | '{0}' matches '{1}' => {2}".format(match, content, test_result),
+                      extra=self.__dict__)
         return test_result
 
     def _notcontains(self, match, content):
         """content does not contain match (match not in content)."""
         test_result = match not in content
-        log(self.file, "(content test)    '%s' not in '%s' => %s" % (match, content, test_result))
+        eventlog.info("CONTENT TEST | '{0}' not in '{1}' => {2}".format(match, content, test_result),
+                      extra=self.__dict__)
         return test_result
 
     def _notmatch(self, match, content):
         """match does not match content (match != content)."""
         test_result = match != content
-        log(self.file, "(content test)    '%s' does not match '%s' => %s" % (match, content, test_result))
+        eventlog.info("CONTENT TEST | '{0}' does not match '{1}' => {2}".format(match, content, test_result),
+                      extra=self.__dict__)
         return test_result
 
     def _notnull(self, match, content):
         """content is not null (content != '')."""
         test_result = content != ''
-        log(self.file, "(content test)    '%s' is not null => %s" % (content, test_result))
+        eventlog.info("CONTENT TEST | '{0}' is not null => '{1}'".format(content, test_result),
+                      extra=self.__dict__)
         return test_result
 
     def _null(self, match, content):
         """content is null (content == '')."""
         test_result = content == ''
-        log(self.file, "(content test)    '%s' is null => %s" % (content, test_result))
+        eventlog.info("CONTENT TEST | '{0}' is null => '{1}'".format(content, test_result),
+                      extra=self.__dict__)
         return test_result
 
-    def arithmetic(self, content):  # load all version
+    def arithmetic(self, content):
         """Perform an arithmetic evaluation."""
         import operator
 
@@ -86,11 +102,12 @@ class Event:
         test_result = operations[criteria](content, match) and content and \
             re.search('^-?[0-9]+$', content)
 
-        log(self.file, "(%s test)    '%s' %s '%s' => %s" % (self.TEST_TYPE, content, criteria, match, test_result))
+        eventlog.info("{0} TEST | '{1}' {2} '{3}' => {4}".format(self.TEST_TYPE.upper(), content, criteria, match, test_result),
+                      extra=self.__dict__)
 
         return test_result
 
-    def content(self, content):    # custom functions load all version
+    def content(self, content):
         """Perform a content evaluation."""
         criteria = self.MATCH_CRITERIA
         match = self.MATCH_CONTENT
@@ -116,7 +133,7 @@ class Event:
         self.exit = process.wait()
 
     def verify(self):
-        """Verify event file."""
+        """Verify  that an event file is formatted correctly."""
         missing = []
         problems = 0
 
@@ -128,51 +145,62 @@ class Event:
             if not getattr(self, element):
                 missing.append(element)
 
-        if len(missing) > 0:
-            error("'{0}' is missing {1}".format(self.file, ' '.join(missing)))
+        if missing:
+            eventlog.error("Missing: {0}".format(' '.join(missing)),
+                           extra=self.__dict__)
             problems += 1
 
         if self.TEST_TYPE and not re.search('^(arithmetic|content|status)$', self.TEST_TYPE):
-            error("'{0}' does not contain a valid TEST_TYPE".format(self.file))
+            eventlog.error("Invalid TEST_TYPE", extra=self.__dict__)
             problems += 1
 
         if self.TEST_TYPE and re.search('^(arithmetic|status)$', self.TEST_TYPE):
             if self.MATCH_CONTENT and not re.search('^-?[0-9]+$', self.MATCH_CONTENT):
-                error("'{0}' MATCH_CONTENT must be an integer when performing arithmetic operations".format(self.file))
+                eventlog.error("MATCH_CONTENT must be an integer when performing arithmetic operations",
+                               extra=self.__dict__)
                 problems += 1
 
             if self.MATCH_CRITERIA and not re.search('^(eq|ge|gt|le|lt|ne)$', self.MATCH_CRITERIA):
-                error("'{0}' does not contain valid MATCH_CRITERIA for arithmetic operations".format(self.file))
+                eventlog.error("Invalid MATCH_CRITERIA for arithmetic operations",
+                               extra=self.__dict__)
                 problems += 1
 
         if self.TEST_TYPE == 'content' and self.MATCH_CRITERIA and not re.search('^(contains|does_not_contain|matches|does_not_match|null|not_null)$', self.MATCH_CRITERIA):
-            error("'{0}' does not contain valid MATCH_CRITERIA for content operations".format(self.file))
+            eventlog.error("Invalid MATCH_CRITERIA for content operations",
+                           extra=self.__dict__)
             problems += 1
 
         if self.TRIGGER_CUSTOM and self.TRIGGER_NAMED:
-            error("'{0}' specifies both TRIGGER_CUSTOM and TRIGGER_NAMED (choose one or neither)".format(self.file))
+            eventlog.error("TRIGGER_CUSTOM and TRIGGER_NAMED are both specified (choose one or neither)",
+                           extra=self.__dict__)
             problems += 1
 
         if self.TRIGGER_NAMED:
             if not os.path.isfile(Config.file):
-                error("TRIGGER_NAMED must be defined in '{0}'".format(Config.file))
+                logger.error("TRIGGER_NAMED must be defined in '{0}'".format(Config.file))
                 problems += 1
             elif not os.access(Config.file, os.R_OK):
-                error("No read access to '{0}'".format(Config.file))
+                logger.error("No read access to '{0}'".format(Config.file))
                 problems += 1
 
+        if not self.TRIGGER_CUSTOM and not self.TRIGGER_NAMED:
+            eventlog.warning("Resorting to default trigger",
+                             extra=self.__dict__)
+
         if problems == 1:
-            warning("Encountered 1 issue verifying '{0}'".format(self.file))
+            eventlog.warning("Encountered 1 issue verifying event file",
+                             extra=self.__dict__)
         elif problems >= 2:
-            warning("Encountered {0} issues verifying '{1}'".format(problems, self.file))
+            eventlog.warning("Encountered {0} issues verifying event file".format(problems),
+                             extra=self.__dict__)
 
         return False if problems > 0 else True
 
 
 class Trigger:
     """Store per-event trigger configuration details."""
-    def __init__(self, event_object):
-        self.event = event_object
+    def __init__(self, event):
+        self.event = event
         self.set = None
         self.type = None
 
@@ -186,34 +214,142 @@ class Trigger:
             if defined:
                 self.set = "declare -A event && event[EVENT_NAME]='{0}' && EVENT_NAME='{0}' && {1}".format(self.event.EVENT_NAME, defined)
             else:
-                warning("TRIGGER_NAMED '{0}' not defined in '{1}' for '{2}'".format(named, Config.file, self.event.path))
+                eventlog.warning("TRIGGER_NAMED '{0}' is not defined in '{1}'".format(named, Config.file),
+                                 extra=self.event.__dict__)
 
         if not self.set:
             self.type = 'default'
             self.set = self.default
-            warning('Resorting to default trigger')
+            eventlog.warning("Resorting to default trigger",
+                             extra=self.event.__dict__)
 
     def execute(self):
         """Execute event's trigger."""
-        failure = None
-        log(self.event.file, "(executing trigger)    '%s'" % self.set)
+        failure = False
+        eventlog.info("Executing trigger ({0})".format(self.set),
+                      extra=self.event.__dict__)
+
         if bash(self.set).wait() != 0 and self.type != 'default':
-            log(self.event.file, "(failed to execute custom or named trigger)")
+            eventlog.error("Failed to execute custom or named trigger",
+                           extra=self.event.__dict__)
             if bash(self.default).wait() != 0:
-                log(self.event.file, "(failed to execute default trigger)")
+                eventlog.error("Failed to execute default trigger",
+                               extra=self.event.__dict__)
                 failure = True
+
         if not failure:
-            log(self.event.file, "(successful trigger)")
+            eventlog.info("Successful trigger execution",
+                          extra=self.event.__dict__)
             self.writer()
 
     def writer(self):
         """Update event's config file upon trigger."""
+        # with open(self.event.file) as readfile:
+        #     original = readfile.read()
+
+        # edited = original.replace('STATUS=enabled', 'STATUS=triggered')
+        # edited = edited.replace('STATUS = enabled', 'STATUS = triggered')
+
+        # with open(self.event.file, 'w') as writefile:
+        #     writefile.write(edited)
+
+        with open(self.event.file, 'rw') as rwfile:
+            rwfile.write(rwfile.replace('STATUS=enabled', 'STATUS=triggered'))
+            rwfile.write(rwfile.replace('STATUS = enabled', 'STATUS = triggered'))
+
         with open(self.event.file) as readfile:
-            text = readfile.read()
-        text = text.replace('STATUS=enabled', 'STATUS=triggered')
-        text = text.replace('STATUS = enabled', 'STATUS = triggered')
-        with open(self.event.file, 'w') as writefile:
-            writefile.write(text)
+            if re.search('(STATUS=triggered|STATUS = triggered)', readfile):
+                eventlog.info("Event file STATUS successfully updated to triggered",
+                              extra=self.event.__dict__)
+            else:
+                eventlog.error("Event file STATUS unsuccessfully updated to triggered!",
+                               extra=self.event.__dict__)
+
+
+def bash(args):
+    """Execute bash command."""
+    import subprocess
+    return subprocess.Popen(['bash', '-c', args],
+                            stderr=subprocess.PIPE,
+                            stdout=subprocess.PIPE)
+
+
+def _configure():
+    """Prepare initial configuration."""
+    from batchpath import GeneratePaths
+
+    opts, args = _parser()
+
+    Config.debug = opts.debug
+    Config.verbose = opts.verbose
+    Config.verify = opts.verify
+
+    level = logging.DEBUG if Config.debug else \
+            logging.INFO if Config.verbose else \
+            logging.WARNING
+
+    global logger
+    logger.setLevel(level)
+
+    global eventlog
+    eventlog.setLevel(level)
+
+    Config.file = '{0}/.config/scripts/{1}/triggers.conf'.format(os.environ['HOME'], __program__)
+    Config.events = GeneratePaths().files(args, os.W_OK, ['conf', 'txt'], 0)
+
+    logger.debug("debug = {0}".format(Config.debug))
+    logger.debug("verbose = {0}".format(Config.verbose))
+    logger.debug("loglevel = {0}".format(level))
+
+    logger.debug("verify = {0}".format(Config.verbose))
+    logger.debug("triggerfile = {0}".format(Config.file))
+    logger.debug("events = {0}".format(Config.events))
+
+
+def _events():
+    """Process list of event files."""
+    import sys
+
+    if not Config.events:
+        logger.error("You have not supplied any valid targets")
+        logger.error("Try '{0} --help' for more information.".format(__program__))
+        sys.exit(1)
+
+    for path in Config.events:
+        event = Event(path)
+
+        if event.skip:
+            continue
+
+        event.execute()
+
+        if event.test():
+            trigger = Trigger(event)
+            trigger.execute()
+
+
+def _logging():
+    """Initialize program and event loggers."""
+    # level = logging.DEBUG if Config.verbose else logging.WARNING
+    # logging.basicConfig(format='[%(basename)s] %(levelname)s: %(message)s',
+    #                     level=level)
+
+    # NOTE: There may be significant room for improvement with the logging
+    #       functionality. Is there a way to do it without global?
+
+    global logger
+    logger = logging.getLogger(__program__)
+    tstream = logging.StreamHandler()
+    tformat = logging.Formatter('(%(name)s) %(levelname)s: %(message)s')
+    tstream.setFormatter(tformat)
+    logger.addHandler(tstream)
+
+    global eventlog
+    eventlog = logging.getLogger('event')
+    estream = logging.StreamHandler()
+    eformat = logging.Formatter('[%(basename)s] %(levelname)s: %(message)s')
+    estream.setFormatter(eformat)
+    eventlog.addHandler(estream)
 
 
 def _parser():
@@ -224,6 +360,11 @@ def _parser():
         add_help=False,
         description="Trigger an event or notification upon the output of a command.",
         usage="%(prog)s [OPTION] <event files|folders>")
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        dest="debug",
+        help="set the logging level to debug")
     parser.add_argument(
         "--verbose",
         action="store_true",
@@ -254,82 +395,18 @@ def _parser():
     return opts, args
 
 
-def bash(args):
-    """Execute bash command."""
-    import subprocess
-    return subprocess.Popen(['bash', '-c', args],
-                            stderr=subprocess.PIPE,
-                            stdout=subprocess.PIPE)
-
-
-def _configure():
-    """Prepare initial configuration."""
-    Config.home = os.environ['HOME']
-    Config.script = os.path.basename(sys.argv[0])
-    Config.file = '{0}/.config/scripts/{1}/triggers.conf'.format(Config.home,
-                                                                 __program__)
-
-
-def error(*objs):
-    """Print error message to stderr."""
-    print('ERROR:', *objs, file=sys.stderr)
-
-
-def eventhandler(events):
-    """Process list of event files."""
-    for path in events:
-        event = Event(path)
-
-        if event.skip:
-            continue
-
-        event.execute()
-
-        if event.test():
-            trigger = Trigger(event)
-            trigger.execute()
-
-
-def log(filename, message):
-    """Print verbose logging to console."""
-    if Config.verbose:
-        stderr("{0:<20} {1}".format(os.path.basename(filename), message))
-
-
 def main():
     """Start application."""
-    from batchpath import GeneratePaths
-
+    _logging()
     _configure()
-
-    opts, args = _parser()
-
-    Config.verbose = opts.verbose
-    Config.verify = opts.verify
-    Config.events = GeneratePaths().files(args, os.W_OK, ['conf', 'txt'], 0)
-
-    if len(Config.events) == 0:
-        error('You have not supplied any valid targets')
-        stderr("Try '{0} --help' for more information.".format(Config.script))
-        sys.exit(1)
-
-    eventhandler(Config.events)
-
-
-def stderr(*objs):
-    """Print message to stderr."""
-    print(*objs, file=sys.stderr)
-
-
-def warning(*objs):
-    """Print warning message to stderr."""
-    print('WARNING:', *objs, file=sys.stderr)
+    _events()
 
 
 from configobj import ConfigObj
+import logging
 import os
 import re
-import sys
+
 
 if __name__ == '__main__':
     main()
