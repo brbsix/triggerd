@@ -7,7 +7,7 @@ An event file containing the trigger criteria is created. Ideally, you'll create
 
 triggerd is perfect for querying a webpage for matching text or anything of the sort. I originally created it for use with a modified version of urlwatch to notify me upon certain changes to webpages, however the potential uses are limitless.
 
-The script was originally written in Bash shell script, a copy of which is included in this repository as ``triggerd.sh``. It is nearly syntactically identical to the Python version (it only lacks the --verbose option). It is a great alternative if Python 3 is not available in your environment.
+The script was originally written in Bash shell script. It is nearly syntactically identical to the Python version and is a great alternative if Python 3 is not available in your environment. It is included in this repository under ``scripts/triggerd.sh``. It is placed in your local bin folder upon installation of triggerd via pip.
 
 Installation
 ============
@@ -19,6 +19,15 @@ The easiest way to install triggerd is via pip (assuming it is installed).
   pip3 install --user triggerd
 
 FYI: The shell version of triggerd will be included in your local bin folder as ``triggerd.sh``
+
+Update
+=======
+
+Run the following command to update to the most recent version:
+
+::
+
+  pip3 install --upgrade --user triggerd
 
 Usage
 ===========
@@ -41,7 +50,7 @@ You can test your event file configuration without actually executing it:
 
   triggerd --verify FILE
 
-The Python version of triggerd features a --verbose option to display additional execution details:
+The --verbose option can be used to display execution details:
 
 ::
 
