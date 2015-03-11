@@ -9,6 +9,7 @@ triggerd is perfect for querying a webpage for matching text or anything of the 
 
 The script was originally written in Bash shell script. It is nearly syntactically identical to the Python version and is a great alternative if Python 3 is not available in your environment. It is included in this repository under ``scripts/triggerd.sh``. It is placed in your local bin folder upon installation of triggerd via pip.
 
+
 Installation
 ============
 
@@ -20,6 +21,7 @@ The easiest way to install triggerd is via pip (assuming it is installed).
 
 FYI: The shell version of triggerd will be included in your local bin folder as ``triggerd.sh``
 
+
 Update
 =======
 
@@ -28,6 +30,7 @@ Run the following command to update to the most recent version:
 ::
 
   pip3 install --upgrade --user triggerd
+
 
 Usage
 ===========
@@ -76,7 +79,6 @@ Here is a sample event file:
 
 ::
 
-
   arithmetic
   content
   status (exit code)
@@ -113,6 +115,7 @@ Here is a sample event file:
   disabled
   triggered (this will be set by triggerd upon a trigger event)
 
+
 Triggers
 ========
 
@@ -120,7 +123,7 @@ There are two types of triggers available.
 
 ``TRIGGER_CUSTOM`` is used to indicate a shell command.
 
-i.e. ``TRIGGER_CUSTOM=notify-send "Trigger Notification"
+i.e. ``TRIGGER_CUSTOM=notify-send "Trigger Notification"``
 
 ``TRIGGER_NAMED`` is used to indicate a trigger template.
 
@@ -131,6 +134,7 @@ ie. ``special=notify-send --icon=~/.config/scripts/triggerd/icons/special.png --
 The event name can be used in either trigger as ``$EVENT_NAME``.
 
 If no trigger is indicated, a default notification will be displayed via notify-send.
+
 
 License
 =======

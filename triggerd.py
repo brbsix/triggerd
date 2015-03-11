@@ -9,7 +9,7 @@ import os
 import re
 
 __program__ = 'triggerd'
-__version__ = '0.2'
+__version__ = '0.3'
 
 
 class Config:  # pylint: disable=R0903
