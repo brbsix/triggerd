@@ -13,7 +13,7 @@ The script was originally written in Bash shell script. It is nearly syntactical
 Installation
 ============
 
-The easiest way to install triggerd is via pip (assuming it is installed).
+The ``triggerd`` package is written in Python 3. The easiest way to install it is via pip:
 
 ::
 
