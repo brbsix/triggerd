@@ -3,7 +3,7 @@ About
 
 triggerd is a sysadmin/automation tool used to trigger an event or notification upon the output of a command.
 
-An event file containing the trigger criteria is created. Ideally, you'll create an entry in cron to execute ``triggerd EVENTFOLDER`` on a regular basis. If the command status or output matches the trigger criteria, a trigger event or notification is executed and the event file is marked triggered.
+An event file containing the trigger criteria is created. Ideally, you'll create an entry in cron to execute ``triggerd EVENTFOLDER`` at a regular interval. If the command status or output matches the trigger criteria, a trigger event or notification is executed and the event file is marked triggered.
 
 triggerd is perfect for querying a webpage for matching text or anything of the sort. I originally created it for use with a modified version of urlwatch to notify me upon certain changes to webpages, however the potential uses are limitless.
 
@@ -63,7 +63,7 @@ The --verbose option can be used to display execution details:
 Event Files
 ===========
 
-FYI: Basic documentation (sample event file and trigger template file) installed to *$PREFIX/share/triggerd/examples*
+FYI: Basic documentation (sample event file and trigger template file) is installed to *$PREFIX/share/triggerd/examples*
 
 Here is a sample event file:
 
@@ -83,7 +83,7 @@ Here is a sample event file:
 
   arithmetic
   content
-  status (exit code)
+  status    # exit code
 
 **MATCH_CRITERIA** for arithmetic and status tests:
 
@@ -115,7 +115,7 @@ Here is a sample event file:
 
   enabled
   disabled
-  triggered (this will be set by triggerd upon a trigger event)
+  triggered    # this will be set by triggerd upon a trigger event
 
 
 Triggers
@@ -127,7 +127,9 @@ There are two types of triggers available.
 
 i.e. ``TRIGGER_CUSTOM=notify-send "Trigger Notification"``
 
-``TRIGGER_NAMED`` is used to indicate a trigger template.
+``TRIGGER_NAMED`` is used to indicate the name of a trigger template.
+
+i.e. ``TRIGGER_NAMED=special``
 
 The trigger templates may be defined in ``$HOME/.config/scripts/triggerd/triggers.conf``
 
