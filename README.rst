@@ -63,6 +63,8 @@ The --verbose option can be used to display execution details:
 Event Files
 ===========
 
+FYI: Basic documentation (sample event file and trigger template file) installed to *$PREFIX/share/triggerd/examples*
+
 Here is a sample event file:
 
 ::
