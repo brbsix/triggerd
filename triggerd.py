@@ -300,18 +300,17 @@ class Trigger:
     def writer(self):
         """Update event's config file upon trigger."""
         with open(self.event.path) as readfile:
-            original_text = readfile.read()
+            original = readfile.read()
 
-        temp = original_text.replace('STATUS=enabled', 'STATUS=triggered')
-        edited_text = temp.replace('STATUS = enabled', 'STATUS = triggered')
+        edited = re.sub('(?<=STATUS)(\ ?)=(\ ?)enabled', '\\1=\\2triggered',
+                        original)
 
-        if edited_text != original_text:
+        if edited != original:
             with open(self.event.path, 'w') as writefile:
-                writefile.write(edited_text)
+                writefile.write(edited)
 
             with open(self.event.path) as readfile:
-                if re.search('(STATUS=triggered|STATUS = triggered)',
-                             readfile.read()):
+                if re.search('STATUS(\ ?)=(\ ?)triggered', readfile.read()):
                     eventlog.info("Event file STATUS successfully updated to "
                                   "triggered", extra=self.event.__dict__)
                 else:
