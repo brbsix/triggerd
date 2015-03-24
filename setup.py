@@ -23,6 +23,7 @@ setup(
     py_modules=['triggerd'],
     scripts=['scripts/bash-config', 'scripts/triggerd.sh'],
     data_files=[('share/triggerd/examples', ['examples/event.txt', 'examples/triggers.conf'])],
+    install_requires=['batchpath', 'configobj'],
     entry_points={
         'console_scripts': ['triggerd=triggerd:main'],
     },
