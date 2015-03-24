@@ -9,7 +9,7 @@ import os
 import re
 
 __program__ = 'triggerd'
-__version__ = '0.4'
+__version__ = '0.4.1'
 
 
 class Config:  # pylint: disable=R0903
@@ -43,64 +43,64 @@ class Event:
 
         if Config.verify:
             self.skip = True
-            eventlog.info("Verifying only", extra=self.__dict__)
-            # TBD: is there a way to wrap eventlog to ensure that all info
+            EVENTLOG.info("Verifying only", extra=self.__dict__)
+            # TBD: is there a way to wrap EVENTLOG to ensure that all info
             #      messages are delivered when Config.verify is True
-            level = eventlog.getEffectiveLevel()
-            eventlog.setLevel(logging.INFO)
+            level = EVENTLOG.getEffectiveLevel()
+            EVENTLOG.setLevel(logging.INFO)
             if self.verify():
-                eventlog.info("Verification OK", extra=self.__dict__)
+                EVENTLOG.info("Verification OK", extra=self.__dict__)
             else:
-                eventlog.info("Verification NOT OK", extra=self.__dict__)
-            eventlog.setLevel(level)
+                EVENTLOG.info("Verification NOT OK", extra=self.__dict__)
+            EVENTLOG.setLevel(level)
             Trigger(self)
         elif self.data.get('STATUS') != 'enabled':
             self.skip = True
-            eventlog.info("Not enabled (skipping)", extra=self.__dict__)
+            EVENTLOG.info("Not enabled (skipping)", extra=self.__dict__)
         elif not self.verify():
             self.skip = True
-            eventlog.info("Failed verification (skipping)",
+            EVENTLOG.info("Failed verification (skipping)",
                           extra=self.__dict__)
 
     def _contains(self, match, content):
         """content contains match (match in content)."""
         result = match in content
-        eventlog.info("CONTENT TEST | '%s' in '%s' => %s", match, content,
+        EVENTLOG.info("CONTENT TEST | '%s' in '%s' => %s", match, content,
                       result, extra=self.__dict__)
         return result
 
     def _matches(self, match, content):
         """match matches content (match == content)."""
         result = match == content
-        eventlog.info("CONTENT TEST | '%s' matches '%s' => %s", match, content,
+        EVENTLOG.info("CONTENT TEST | '%s' matches '%s' => %s", match, content,
                       result, extra=self.__dict__)
         return result
 
     def _notcontains(self, match, content):
         """content does not contain match (match not in content)."""
         result = match not in content
-        eventlog.info("CONTENT TEST | '%s' not in '%s' => %s", match, content,
+        EVENTLOG.info("CONTENT TEST | '%s' not in '%s' => %s", match, content,
                       result, extra=self.__dict__)
         return result
 
     def _notmatch(self, match, content):
         """match does not match content (match != content)."""
         result = match != content
-        eventlog.info("CONTENT TEST | '%s' does not match '%s' => %s", match,
+        EVENTLOG.info("CONTENT TEST | '%s' does not match '%s' => %s", match,
                       content, result, extra=self.__dict__)
         return result
 
     def _notnull(self, match, content):  # pylint: disable=W0613
         """content is not null (content != '')."""
         result = content != ''
-        eventlog.info("CONTENT TEST | '%s' is not null => '%s'", content,
+        EVENTLOG.info("CONTENT TEST | '%s' is not null => '%s'", content,
                       result, extra=self.__dict__)
         return result
 
     def _null(self, match, content):  # pylint: disable=W0613
         """content is null (content == '')."""
         result = content == ''
-        eventlog.info("CONTENT TEST | '%s' is null => '%s'", content,
+        EVENTLOG.info("CONTENT TEST | '%s' is null => '%s'", content,
                       result, extra=self.__dict__)
         return result
 
@@ -117,7 +117,7 @@ class Event:
             re.search('^-?[0-9]+$', content) is not None
 
         ttype = self.data.get('TEST_TYPE').upper()
-        eventlog.info("%s TEST | '%s' %s '%s' => %s", ttype, content, criteria,
+        EVENTLOG.info("%s TEST | '%s' %s '%s' => %s", ttype, content, criteria,
                       match, result, extra=self.__dict__)
 
         return result
@@ -175,50 +175,50 @@ class Event:
             missing.append('MATCH_CONTENT')
 
         if missing:
-            eventlog.error("Missing: %s", ' '.join(missing),
+            EVENTLOG.error("Missing: %s", ' '.join(missing),
                            extra=self.__dict__)
             problems += 1
 
         if ttype not in ('arithmetic', 'content', 'status', None):
-            eventlog.error("Invalid TEST_TYPE", extra=self.__dict__)
+            EVENTLOG.error("Invalid TEST_TYPE", extra=self.__dict__)
             problems += 1
 
         if ttype not in ('arithmetic', 'status', None):
             if mcontent and not mcontent.lstrip('-').isdigit():
-                eventlog.error("MATCH_CONTENT must be an integer for "
+                EVENTLOG.error("MATCH_CONTENT must be an integer for "
                                "arithmetic operations", extra=self.__dict__)
                 problems += 1
 
             if mcriteria not in arithmetic_criteria:
-                eventlog.error("Invalid MATCH_CRITERIA for arithmetic "
+                EVENTLOG.error("Invalid MATCH_CRITERIA for arithmetic "
                                "operations", extra=self.__dict__)
                 problems += 1
 
         if ttype == 'content' and mcriteria not in content_criteria:
-            eventlog.error("Invalid MATCH_CRITERIA for content operations",
+            EVENTLOG.error("Invalid MATCH_CRITERIA for content operations",
                            extra=self.__dict__)
             problems += 1
 
         if tcustom and tnamed:
-            eventlog.error("TRIGGER_CUSTOM and TRIGGER_NAMED are both "
+            EVENTLOG.error("TRIGGER_CUSTOM and TRIGGER_NAMED are both "
                            "specified (choose one or neither)",
                            extra=self.__dict__)
             problems += 1
 
         if tnamed:
             if not os.path.isfile(Config.file):
-                logger.error("TRIGGER_NAMED must be defined in '%s'",
+                LOGGER.error("TRIGGER_NAMED must be defined in '%s'",
                              Config.file)
                 problems += 1
             elif not os.access(Config.file, os.R_OK):
-                logger.error("No read access to '%s'", Config.file)
+                LOGGER.error("No read access to '%s'", Config.file)
                 problems += 1
 
         if problems == 1:
-            eventlog.warning("Encountered 1 issue verifying event file",
+            EVENTLOG.warning("Encountered 1 issue verifying event file",
                              extra=self.__dict__)
         elif problems >= 2:
-            eventlog.warning("Encountered %s issues verifying event file",
+            EVENTLOG.warning("Encountered %s issues verifying event file",
                              problems, extra=self.__dict__)
 
         return False if problems > 0 else True
@@ -239,37 +239,37 @@ class Trigger:
 
         if customtrigger:
             self.set = Config.default.format(eventname, customtrigger)
-            eventlog.info("Configured TRIGGER_CUSTOM (%s)", customtrigger,
+            EVENTLOG.info("Configured TRIGGER_CUSTOM (%s)", customtrigger,
                           extra=event.__dict__)
         elif tname:
             tro = ConfigObj(Config.file)
             definition = tro.get(tname)
             if definition:
                 self.set = Config.default.format(eventname, definition)
-                eventlog.info("Configured TRIGGER_NAMED '%s' (%s)", tname,
+                EVENTLOG.info("Configured TRIGGER_NAMED '%s' (%s)", tname,
                               definition, extra=event.__dict__)
             else:
-                eventlog.warning("TRIGGER_NAMED '%s' is not defined in '%s'",
+                EVENTLOG.warning("TRIGGER_NAMED '%s' is not defined in '%s'",
                                  tname, Config.file, extra=event.__dict__)
 
         if self.set is None:
             self.type = 'default'
             self.set = self.default
-            eventlog.warning("No trigger configured (will use default)",
+            EVENTLOG.warning("No trigger configured (will use default)",
                              extra=event.__dict__)
 
     def execute(self):
         """Manage execution of event's trigger."""
-        eventlog.info("Executing trigger (%s)", self.set,
+        EVENTLOG.info("Executing trigger (%s)", self.set,
                       extra=self.event.__dict__)
 
         if self.helper():
             try:
-                eventlog.info("Updating event file STATUS to triggered",
+                EVENTLOG.info("Updating event file STATUS to triggered",
                               extra=self.event.__dict__)
                 self.writer()
-            except:
-                eventlog.error("Exception while updating STATUS to triggered",
+            except:  # pylint: disable=W0702
+                EVENTLOG.error("Exception while updating STATUS to triggered",
                                extra=self.event.__dict__)
 
     def helper(self):
@@ -277,23 +277,23 @@ class Trigger:
 
         status = _bash(self.set).wait()
         if status != 0 and self.type != 'default':
-            eventlog.error("Failed to execute custom or named trigger",
+            EVENTLOG.error("Failed to execute custom or named trigger",
                            extra=self.event.__dict__)
 
             retry = _bash(self.default).wait()
             if retry != 0:
-                eventlog.error("Retry failed to execute default trigger",
+                EVENTLOG.error("Retry failed to execute default trigger",
                                extra=self.event.__dict__)
             elif retry == 0:
-                eventlog.info("Retry successfully executed default trigger",
+                EVENTLOG.info("Retry successfully executed default trigger",
                               extra=self.event.__dict__)
                 return True
         elif status == 0:
             if self.type == 'default':
-                eventlog.info("Successfully executed default trigger",
+                EVENTLOG.info("Successfully executed default trigger",
                               extra=self.event.__dict__)
             else:
-                eventlog.info("Successfully executed configured trigger",
+                EVENTLOG.info("Successfully executed configured trigger",
                               extra=self.event.__dict__)
             return True
 
@@ -302,7 +302,7 @@ class Trigger:
         with open(self.event.path) as readfile:
             original = readfile.read()
 
-        edited = re.sub('(?<=STATUS)(\ ?)=(\ ?)enabled', '\\1=\\2triggered',
+        edited = re.sub(r'(?<=STATUS)(\ ?)=(\ ?)enabled', '\\1=\\2triggered',
                         original)
 
         if edited != original:
@@ -310,14 +310,14 @@ class Trigger:
                 writefile.write(edited)
 
             with open(self.event.path) as readfile:
-                if re.search('STATUS(\ ?)=(\ ?)triggered', readfile.read()):
-                    eventlog.info("Event file STATUS successfully updated to "
+                if re.search(r'STATUS(\ ?)=(\ ?)triggered', readfile.read()):
+                    EVENTLOG.info("Event file STATUS successfully updated to "
                                   "triggered", extra=self.event.__dict__)
                 else:
-                    eventlog.error("Event file STATUS unsuccessfully updated "
+                    EVENTLOG.error("Event file STATUS unsuccessfully updated "
                                    "to triggered!", extra=self.event.__dict__)
         else:
-            eventlog.error("Event file STATUS not updated (it was already "
+            EVENTLOG.error("Event file STATUS not updated (it was already "
                            "changed)", extra=self.event.__dict__)
 
 
@@ -342,19 +342,19 @@ def _configure():
     level = logging.DEBUG if Config.debug else logging.INFO if \
         Config.verbose else logging.WARNING
 
-    eventlog.setLevel(level)
-    logger.setLevel(level)
+    EVENTLOG.setLevel(level)
+    LOGGER.setLevel(level)
 
     Config.file = "{0}/.config/scripts/{1}/triggers.conf" \
                   .format(os.environ['HOME'], __program__)
     Config.events = GeneratePaths().files(args, os.W_OK, ['conf', 'txt'], 0)
 
-    logger.debug("debug = %s", Config.debug)
-    logger.debug("verbose = %s", Config.verbose)
-    logger.debug("verify = %s", Config.verbose)
-    logger.debug("triggerfile = %s", Config.file)
-    logger.debug("events = %s", Config.events)
-    logger.debug("loglevel = %s", level)
+    LOGGER.debug("debug = %s", Config.debug)
+    LOGGER.debug("verbose = %s", Config.verbose)
+    LOGGER.debug("verify = %s", Config.verbose)
+    LOGGER.debug("triggerfile = %s", Config.file)
+    LOGGER.debug("events = %s", Config.events)
+    LOGGER.debug("loglevel = %s", level)
 
 
 def _events():
@@ -362,8 +362,8 @@ def _events():
     import sys
 
     if not Config.events:
-        logger.error("You have not supplied any valid targets")
-        logger.error("Try '%s --help' for more information.", __program__)
+        LOGGER.error("You have not supplied any valid targets")
+        LOGGER.error("Try '%s --help' for more information.", __program__)
         sys.exit(1)
 
     for path in Config.events:
@@ -450,19 +450,19 @@ def main():
     _events()
 
 
+# NOTE: There may be significant room for improvement with this
+#       logging implementation.
+EVENTLOG = logging.getLogger('event')
+ESTREAM = logging.StreamHandler()
+EFORMAT = logging.Formatter('[%(basename)s] %(levelname)s: %(message)s')
+ESTREAM.setFormatter(EFORMAT)
+EVENTLOG.addHandler(ESTREAM)
+
+LOGGER = logging.getLogger(__program__)
+TSTREAM = logging.StreamHandler()
+TFORMAT = logging.Formatter('(%(name)s) %(levelname)s: %(message)s')
+TSTREAM.setFormatter(TFORMAT)
+LOGGER.addHandler(TSTREAM)
+
 if __name__ == '__main__':
-    # NOTE: There may be significant room for improvement with this
-    #       logging implementation. Is there a way?
-    eventlog = logging.getLogger('event')
-    estream = logging.StreamHandler()
-    eformat = logging.Formatter('[%(basename)s] %(levelname)s: %(message)s')
-    estream.setFormatter(eformat)
-    eventlog.addHandler(estream)
-
-    logger = logging.getLogger(__program__)
-    tstream = logging.StreamHandler()
-    tformat = logging.Formatter('(%(name)s) %(levelname)s: %(message)s')
-    tstream.setFormatter(tformat)
-    logger.addHandler(tstream)
-
     main()
