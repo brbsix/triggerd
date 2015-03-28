@@ -18,8 +18,8 @@ load_event(){
     event[triggered]=false
     event[FILENAME]=${event_file##*/}
     while IFS= read -r line; do
-        local parameter=$(grep -oP "^[A-Za-z0-9_-]+(?==)" <<< "$line")
-        local value=$(sed -n "s/^${parameter}=//p" <<< "$line")
+        local parameter=${line%%=*}
+        local value=${line#*=}
         [[ -n $parameter && -n $value ]] && event["$parameter"]="$value"
     done < "$event_file"
 }
