@@ -3,11 +3,11 @@
 # Read and write config files from Bash
 
 
-declare -r SCRIPTNAME='bash-config'
-declare -r VERSION='0.1.dev1'
+readonly SCRIPTNAME='bash-config'
+readonly VERSION='0.1.dev1'
 
-declare -r SEPARATOR_BASH='='
-declare -r SEPARATOR_INI=' = '
+readonly SEPARATOR_BASH='='
+readonly SEPARATOR_INI=' = '
 
 
 error(){
@@ -17,17 +17,17 @@ error(){
 get_line_number(){
     set_mode
     local output=$(sed -n "/^${parameter}${separator}/=" "$config" 2>/dev/null)
-    [[ $output =~ ^[1-9][0-9]*$ ]] && line_number="$output"
+    [[ ! -z ${output##*[!0-9]*} ]] && line_number="$output"
 }
 
 main(){
     scriptfile=${0##*/}
 
-    if [[ $1 =~ ^(-b|--bash)$ ]]; then
+    if echo "$1" | grep -Eq '^(-b|--bash)$'; then
         option_mode=bash
-    elif [[ $1 =~ ^(-c|--custom)$ ]]; then
+    elif echo "$1" | grep -Eq '^(-c|--custom)$'; then
         option_mode=custom
-    elif [[ $1 =~ ^(-i|--ini)$ ]]; then
+    elif echo "$1" | grep -Eq '^(-i|--ini)$'; then
         option_mode=ini
     fi
 
@@ -54,9 +54,9 @@ main(){
         error "No arguments"
         see_help_msg
         exit 1
-    elif (( args == 1 )) && [[ $1 =~ ^(-h|--help)$ ]]; then
+    elif (( args == 1 )) && echo "$1" | grep -Eq '^(-h|--help|help)$'; then
         usage
-    elif (( args == 1 )) && [[ $1 =~ ^(-v|--version)$ ]]; then
+    elif (( args == 1 )) && echo "$1" | grep -Eq '^(-v|--version|version)$'; then
         echo "$SCRIPTNAME $VERSION"
         exit 0
     elif (( args == 2 )); then
@@ -150,7 +150,7 @@ remove_parameter(){
 }
 
 sanitize_parameter(){
-    if [[ ! $parameter =~ ^[A-Za-z0-9_-]\+$ ]]; then
+    if ! echo "$parameter" | grep -q '^[A-Za-z0-9_-]\+$'; then
         error "Parameter may consist of A-Z, a-z, 0-9, underscores, and dashes (no spaces or special characters)"
         exit 1
     fi
@@ -204,9 +204,9 @@ usage(){
 		  -i, --ini             use ini mode ex. ' = '
 		  -v, --version         show program's version number and exit
 
-		- Enter a value to create or update an entry
-		- Specify only a parameter to print the currently set value (if any)
-		- Use '%' to delete the config file or a specific parameter
+		* Enter a value to create or update an entry
+		* Specify only a parameter to print the currently set value (if any)
+		* Use '%' to delete the config file or a specific parameter
 		EOF
         exit 0
 }
@@ -234,7 +234,4 @@ write_parameter(){
     verify_write
 }
 
-
-if [[ ${FUNCNAME[-1]} = main ]]; then
-    main "$@"
-fi
+main "$@"
