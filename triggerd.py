@@ -325,7 +325,9 @@ class Trigger:
 def _bash(args):
     """Execute bash command."""
     import subprocess
-    return subprocess.Popen(['bash', '-c', args],
+    return subprocess.Popen(args,
+                            executable='bash',
+                            shell=True,
                             stderr=subprocess.PIPE,
                             stdout=subprocess.PIPE)
 
