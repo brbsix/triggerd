@@ -175,7 +175,7 @@ class Event:
             missing.append('MATCH_CONTENT')
 
         if missing:
-            EVENTLOG.error("Missing: %s", ' '.join(missing),
+            EVENTLOG.error("Missing %s", ' '.join(missing),
                            extra=self.__dict__)
             problems += 1
 

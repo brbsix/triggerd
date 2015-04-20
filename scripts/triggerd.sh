@@ -94,7 +94,7 @@ verify_event(){
     done
 
     if [[ ${#missing[@]} -gt 0 ]]; then
-        eventlog ERROR "${event[FILENAME]}" "Missing: ${missing[@]}"
+        eventlog ERROR "${event[FILENAME]}" "Missing ${missing[@]}"
         ((++errors))
     fi
 
