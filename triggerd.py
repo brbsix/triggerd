@@ -183,7 +183,7 @@ class Event:
             EVENTLOG.error("Invalid TEST_TYPE", extra=self.__dict__)
             problems += 1
 
-        if ttype not in ('arithmetic', 'status', None):
+        if ttype in ('arithmetic', 'status'):
             if mcontent and not mcontent.lstrip('-').isdigit():
                 EVENTLOG.error("MATCH_CONTENT must be an integer for "
                                "arithmetic operations", extra=self.__dict__)
