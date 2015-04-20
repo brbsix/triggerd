@@ -155,11 +155,12 @@ class Event:
     def verify(self):  # pylint: disable=R0912
         """Verify  that an event file is formatted correctly."""
         problems = 0
-        arithmetic_criteria = ['eq', 'ge', 'gt', 'le', 'lt', 'ne', None]
+        arithmetic_criteria = ['eq', 'ge', 'gt', 'le', 'lt', 'ne', None, '']
         content_criteria = ['contains', 'does_not_contain', 'matches',
-                            'does_not_match', 'null', 'not_null', None]
+                            'does_not_match', 'null', 'not_null', None, '']
         required = ['COMMAND', 'EVENT_NAME', 'MATCH_CRITERIA',
                     'STATUS', 'TEST_TYPE']
+        ttypes = ['arithmetic', 'content', 'status', None, '']
 
         ttype = self.data.get('TEST_TYPE')
         mcontent = self.data.get('MATCH_CONTENT')
@@ -167,7 +168,7 @@ class Event:
         tcustom = self.data.get('TRIGGER_CUSTOM')
         tnamed = self.data.get('TRIGGER_NAMED')
 
-        missing = [f for f in required if self.data.get(f) is None]
+        missing = [f for f in required if self.data.get(f) is None or self.data.get(f) is '']
 
         # check whether MATCH_CONTENT field is necessary
         if not re.search('^(not_)?null$', self.data.get('MATCH_CRITERIA')) \
@@ -179,7 +180,7 @@ class Event:
                            extra=self.__dict__)
             problems += 1
 
-        if ttype not in ('arithmetic', 'content', 'status', None):
+        if ttype not in ttypes:
             EVENTLOG.error("Invalid TEST_TYPE", extra=self.__dict__)
             problems += 1
 
