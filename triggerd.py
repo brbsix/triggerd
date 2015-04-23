@@ -350,8 +350,13 @@ def _configure():
 
     Config.file = "{0}/.config/scripts/{1}/triggers.conf" \
                   .format(os.environ['HOME'], __program__)
-    Config.events = GeneratePaths().files(args, os.W_OK, ['conf', 'txt'], 0)
 
+    Config.events = GeneratePaths().files(args, access=os.W_OK,
+                                                extensions=['conf', 'txt'],
+                                                minsize=0,
+                                                recursion=True)
+
+    LOGGER.info("processing %s events", len(Config.events))
     LOGGER.debug("debug = %s", Config.debug)
     LOGGER.debug("verbose = %s", Config.verbose)
     LOGGER.debug("verify = %s", Config.verbose)
