@@ -325,11 +325,10 @@ class Trigger:
 def _bash(args):
     """Execute bash command."""
     import subprocess
-    return subprocess.Popen(args,
-                            executable='bash',
-                            shell=True,
-                            stderr=subprocess.PIPE,
-                            stdout=subprocess.PIPE)
+    return subprocess.Popen(args, executable='bash',
+                                  shell=True,
+                                  stderr=subprocess.PIPE,
+                                  stdout=subprocess.PIPE)
 
 
 def _configure():
@@ -425,7 +424,7 @@ def _parser():
         "--verbose",
         action="store_true",
         dest="verbose",
-        help="show event execution details")
+        help="set the logging level to verbose")
     parser.add_argument(
         "--verify",
         action="store_true",
@@ -458,8 +457,7 @@ def main():
     _events()
 
 
-# NOTE: There may be significant room for improvement with this
-#       logging implementation.
+# FIXME: there may be room for improvement with this logging implementation
 EVENTLOG = logging.getLogger('event')
 ESTREAM = logging.StreamHandler()
 EFORMAT = logging.Formatter('[%(basename)s] %(levelname)s: %(message)s')
