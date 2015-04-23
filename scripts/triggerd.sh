@@ -159,7 +159,7 @@ for arg in "${@}"; do
         if [[ -r $arg ]]; then
             while IFS= read -r line; do
                 events+=("$line")
-            done < <(find "$arg" -maxdepth 1 \( -empty -name '.*' -prune \) -o \( -name '*.conf' -o -name '*.txt' -print -type f -writable \))
+            done < <(find "$arg" \( -empty -name '.*' -prune \) -o \( -name '*.conf' -o -name '*.txt' -print -type f -writable \))
         else
             logger ERROR "Skipping '$arg' directory (no read access)"
         fi
@@ -170,6 +170,8 @@ if (( ${#events[@]} == 0 )); then
     logger ERROR "You have not supplied any valid targets"
     exit 1
 fi
+
+logger INFO "processing ${#events[@]} events"
 
 for event_file in "${events[@]}"; do
 
