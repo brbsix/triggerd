@@ -3,7 +3,7 @@
 # Read and write config files from Bash
 
 
-readonly SCRIPTNAME='bash-config'
+readonly PROGRAM="${0##*/}"
 readonly VERSION='0.1.dev1'
 
 readonly SEPARATOR_BASH='='
@@ -21,8 +21,6 @@ get_line_number(){
 }
 
 main(){
-    scriptfile=${0##*/}
-
     if echo "$1" | grep -Eq '^(-b|--bash)$'; then
         option_mode=bash
     elif echo "$1" | grep -Eq '^(-c|--custom)$'; then
@@ -57,7 +55,7 @@ main(){
     elif (( args == 1 )) && echo "$1" | grep -Eq '^(-h|--help|help)$'; then
         usage
     elif (( args == 1 )) && echo "$1" | grep -Eq '^(-v|--version|version)$'; then
-        echo "$SCRIPTNAME $VERSION"
+        echo "$PROGRAM $VERSION"
         exit 0
     elif (( args == 2 )); then
         if [[ $parameter = % ]]; then
@@ -157,31 +155,40 @@ sanitize_parameter(){
 }
 
 see_help_msg(){
-    echo "Try '$scriptfile --help' for more information." >&2
+    echo "Try '$PROGRAM --help' for more information." >&2
 }
 
 set_mode(){
-    grep -q "^[A-Za-z0-9_-]\+${SEPARATOR_BASH}" "$config" 2>/dev/null && mode+=(bash)
-    grep -q "^[A-Za-z0-9_-]\+${SEPARATOR_INI}" "$config" 2>/dev/null && mode+=(ini)
-    [[ $option_mode = custom ]] && grep -q "^[A-Za-z0-9_-]\+${separator_custom}" "$config" 2>/dev/null && mode+=(custom)
+    grep -q "^[A-Za-z0-9_-]\+${SEPARATOR_BASH}" "$config" &>/dev/null && mode+=(bash)
+
+    grep -q "^[A-Za-z0-9_-]\+${SEPARATOR_INI}" "$config" &>/dev/null && mode+=(ini)
+
+    [[ $option_mode = custom ]] && grep -q "^[A-Za-z0-9_-]\+${separator_custom}" "$config" &>/dev/null && mode+=(custom)
 
     if (( ${#mode[@]} > 1 )); then
         error "Unable to determine a consistent configuration file format. Are you sure '$config' is a config file?"
         exit 1
     fi
 
-    if [[ -n $option_mode ]]; then  # OPTION IS SET
-        if [[ -n ${mode[0]} && ( ${mode[0]} != $option_mode ) ]]; then  # use detected mode in the event of a conflicting option
+    # OPTION IS SET
+    if [[ -n $option_mode ]]; then
+
+        if [[ -n ${mode[0]} && ( ${mode[0]} != $option_mode ) ]]; then
+            # use detected mode in the event of a conflicting option
             echo "WARNING: '$config' was intified as ${mode[0]} mode (ignoring $option_mode option)" >&2
             mode=${mode[0]}
         else
-            mode=$option_mode  # use optioned mode
+            # use optioned mode
+            mode=$option_mode
         fi
-    elif [[ -n ${mode[0]} ]]; then  # NO OPTION IS SET and we have detected mode
-        mode=${mode[0]}  # use detected mode
+
+    # NO OPTION IS SET and we have detected mode
+    elif [[ -n ${mode[0]} ]]; then
+        # use detected mode
+        mode=${mode[0]}
     fi
 
-    set_separator $mode
+    set_separator "$mode"
 }
 
 set_separator(){
@@ -190,13 +197,14 @@ set_separator(){
     elif [[ $1 = ini ]]; then
         separator=$SEPARATOR_INI
     else
-        separator=$SEPARATOR_BASH  # default to bash mode
+        # default to bash mode
+        separator=$SEPARATOR_BASH
     fi
 }
 
 usage(){
         cat <<-EOF
-		Usage: $scriptfile [OPTION] <config file> <parameter> [value]
+		Usage: $PROGRAM [OPTION] <config file> <parameter> [value]
 		Read and write config files from bash.
 
 		  -b, --bash            use bash mode ex. '='
@@ -212,8 +220,9 @@ usage(){
 }
 
 verify_write(){
-    if [[ $(grep "^${parameter}${separator}${value}$" "$config" 2>/dev/null) != "${parameter}${separator}${value}" ]]; then
-        error "Failed to write '${parameter}${separator}${value}' to '$config'"
+    local fullstring=${parameter}${separator}${value}
+    if ! grep -q "^${fullstring}$" "$config" &>/dev/null; then
+        error "Failed to write '${fullstring}' to '$config'"
         exit 1
     fi
 }
@@ -228,7 +237,7 @@ write_parameter(){
             sort -o "$config" "$config"
         fi
     else
-        set_separator $option_mode
+        set_separator "$option_mode"
         echo "${parameter}${separator}${value}" >> "$config"
     fi
     verify_write
