@@ -421,6 +421,10 @@ def _parser():
         dest="debug",
         help="set the logging level to debug")
     parser.add_argument(
+        "-h", "--help",
+        action="help",
+        help=argparse.SUPPRESS)
+    parser.add_argument(
         "--verbose",
         action="store_true",
         dest="verbose",
@@ -430,10 +434,6 @@ def _parser():
         action="store_true",
         dest="verify",
         help="verify event files without execution")
-    parser.add_argument(
-        "-h", "--help",
-        action="help",
-        help=argparse.SUPPRESS)
     parser.add_argument(
         "--version",
         action="version",
