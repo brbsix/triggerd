@@ -3,7 +3,8 @@
 # Trigger an event or notification upon the output of a command
 
 
-CONFIG="$HOME/.config/scripts/${0##*/}/triggers.conf"
+PROGRAM="${0##*/}"
+CONFIG="$HOME/.config/scripts/$PROGRAM/triggers.conf"
 DEFAULT_TRIGGER='notify-send --icon=notification-message-im --urgency=critical "triggerd: $EVENT_NAME" "We have a trigger event!"'
 
 
@@ -136,10 +137,10 @@ verify_event(){
 
 if (( $# == 0 )); then
     logger ERROR "Please indicate target event files and/or directories"
-    logger ERROR "Try '${0##*/} --help' for more information."
+    logger ERROR "Try '$PROGRAM --help' for more information."
     exit 1
 elif (( $# == 1 )) && [[ $1 =~ ^(-h|--help)$ ]]; then
-    echo "Usage: ${0##*/} <event files|folders>"
+    echo "Usage: $PROGRAM <event files|folders>"
     echo "Show notifications based on custom recurring events."
     echo
     echo "  --verbose              show event execution details"
