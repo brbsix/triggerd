@@ -121,7 +121,7 @@ verify_event(){
     fi
 
     if [[ -n ${event[TRIGGER_CUSTOM]} && -n ${event[TRIGGER_NAMED]} ]]; then
-        eventlog ERROR "${event[FILENAME]}" "TRIGGER_CUSTOM and TRIGGER_NAMED are both specified (choose one or neither)"
+        eventlog ERROR "${event[FILENAME]}" "TRIGGER_CUSTOM and TRIGGER_NAMED are both indicated (choose one or neither)"
         ((++errors))
     fi
 
