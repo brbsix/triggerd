@@ -41,6 +41,8 @@ class Event:
 
         self.data = ConfigObj(path)
 
+        EVENTLOG.info("Processing event", extra=self.__dict__)
+
         if Config.verify:
             self.skip = True
             EVENTLOG.info("Verifying only", extra=self.__dict__)
