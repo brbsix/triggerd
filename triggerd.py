@@ -267,13 +267,9 @@ class Trigger:
                       extra=self.event.__dict__)
 
         if self.helper():
-            try:
-                EVENTLOG.info("Updating event file STATUS to triggered",
-                              extra=self.event.__dict__)
-                self.writer()
-            except:  # pylint: disable=W0702
-                EVENTLOG.error("Exception while updating STATUS to triggered",
-                               extra=self.event.__dict__)
+            EVENTLOG.info("Updating event file STATUS to triggered",
+                          extra=self.event.__dict__)
+            self.writer()
 
     def helper(self):
         """Execute event's trigger and return success status."""
@@ -302,26 +298,35 @@ class Trigger:
 
     def writer(self):
         """Update event's config file upon trigger."""
-        with open(self.event.path) as readfile:
-            original = readfile.read()
+        EVENTLOG.debug("Executing writer", extra=self.event.__dict__)
 
-        edited = re.sub(r'(?<=STATUS)(\ ?)=(\ ?)enabled', '\\1=\\2triggered',
-                        original)
-
-        if edited != original:
-            with open(self.event.path, 'w') as writefile:
-                writefile.write(edited)
-
+        try:
             with open(self.event.path) as readfile:
-                if re.search(r'STATUS(\ ?)=(\ ?)triggered', readfile.read()):
-                    EVENTLOG.info("Event file STATUS successfully updated to "
-                                  "triggered", extra=self.event.__dict__)
-                else:
-                    EVENTLOG.error("Event file STATUS unsuccessfully updated "
-                                   "to triggered!", extra=self.event.__dict__)
-        else:
-            EVENTLOG.error("Event file STATUS not updated (it was already "
-                           "changed)", extra=self.event.__dict__)
+                original = readfile.read()
+
+            edited = re.sub(r'(?<=STATUS)(\ ?)=(\ ?)enabled', '\\1=\\2triggered',
+                            original)
+
+            if edited != original:
+                with open(self.event.path, 'w') as writefile:
+                    writefile.write(edited)
+
+                with open(self.event.path) as readfile:
+                    if re.search(r'STATUS(\ ?)=(\ ?)triggered', readfile.read()):
+                        EVENTLOG.info("Event file STATUS successfully updated to "
+                                      "triggered", extra=self.event.__dict__)
+                        return
+                    else:
+                        EVENTLOG.error("Event file STATUS unsuccessfully updated "
+                                       "to triggered!", extra=self.event.__dict__)
+                        return
+            else:
+                EVENTLOG.error("Event file STATUS not updated (it was already "
+                               "changed)", extra=self.event.__dict__)
+                return
+        except:  # pylint: disable=W0702
+            EVENTLOG.error("Exception while updating STATUS to triggered",
+                           extra=self.event.__dict__)
 
 
 def _bash(args):
