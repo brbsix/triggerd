@@ -464,7 +464,6 @@ def main():
     _events()
 
 
-# FIXME: there may be room for improvement with this logging implementation
 EVENTLOG = logging.getLogger('event')
 ESTREAM = logging.StreamHandler()
 EFORMAT = logging.Formatter('[%(basename)s] %(levelname)s: %(message)s')
@@ -476,6 +475,30 @@ TSTREAM = logging.StreamHandler()
 TFORMAT = logging.Formatter('(%(name)s) %(levelname)s: %(message)s')
 TSTREAM.setFormatter(TFORMAT)
 LOGGER.addHandler(TSTREAM)
+
+# # event logger
+# EVENTLOG = logging.getLogger('event')
+# EFORMAT = logging.Formatter('[%(basename)s] %(levelname)s: %(message)s')
+
+# ESTREAM = logging.StreamHandler()
+# ESTREAM.setFormatter(EFORMAT)
+# EVENTLOG.addHandler(ESTREAM)
+
+# EFILE = logging.FileHandler(os.path.join(os.environ['HOME'], 'Desktop', 'events.log'))
+# EFILE.setFormatter(EFORMAT)
+# EVENTLOG.addHandler(EFILE)
+
+# # program logger
+# LOGGER = logging.getLogger(__program__)
+# TFORMAT = logging.Formatter('(%(name)s) %(levelname)s: %(message)s')
+
+# TSTREAM = logging.StreamHandler()
+# TSTREAM.setFormatter(TFORMAT)
+# LOGGER.addHandler(TSTREAM)
+
+# TFILE = logging.FileHandler(os.path.join(os.environ['HOME'], 'Desktop', 'triggered.log'))
+# TFILE.setFormatter(TFORMAT)
+# LOGGER.addHandler(TFILE)
 
 if __name__ == '__main__':
     main()
