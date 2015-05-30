@@ -173,8 +173,8 @@ class Event:
         missing = [f for f in required if self.data.get(f) is None or self.data.get(f) is '']
 
         # check whether MATCH_CONTENT field is necessary
-        if not re.search('^(not_)?null$', self.data.get('MATCH_CRITERIA')) \
-           and not self.data.get('MATCH_CONTENT'):
+        if not re.search('^(not_)?null$', mcriteria or '') \
+           and not mcontent:
             missing.append('MATCH_CONTENT')
 
         if missing:
