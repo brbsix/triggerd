@@ -27,7 +27,7 @@ load_event(){
 
 logger(){
     # Usage: logger WARNING "message"
-    loghandler "($0)" "$1" "$2"
+    loghandler "($PROGRAM)" "$1" "$2"
 }
 
 loghandler(){
