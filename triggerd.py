@@ -224,7 +224,7 @@ class Event:
             EVENTLOG.warning("Encountered %s issues verifying event file",
                              problems, extra=self.__dict__)
 
-        return False if problems > 0 else True
+        return problems == 0
 
 
 class Trigger:
