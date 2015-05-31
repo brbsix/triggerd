@@ -363,11 +363,11 @@ class EventHandler:
 
                 try:
                     # ensure MATCH_CONTENT is an integer
-                    assert self.data.get('MATCH_CONTENT') is None or \
-                        isinstance(self.data.get('MATCH_CONTENT'), int)
-                except AssertionError:
-                    elogger.error("MATCH_CONTENT must be an integer for "
-                                  "arithmetic operations", extra=self.__dict__)
+                    self.data.get('MATCH_CONTENT') is None or \
+                        int(self.data.get('MATCH_CONTENT'))
+                except ValueError:
+                    EVENTLOG.error("MATCH_CONTENT must be an integer for arith"
+                                   "metic operations", extra=self.__dict__)
                     problems += 1
 
                 try:
