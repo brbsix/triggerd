@@ -339,7 +339,7 @@ class EventHandler:
             required = ['COMMAND', 'EVENT_NAME', 'MATCH_CRITERIA',
                         'STATUS', 'TEST_TYPE']
 
-            missing = [f for f in required if self.data.get(f) is None or self.data.get(f) is '']
+            missing = [f for f in required if not self.data.get(f)]
 
             try:
                 # ensure MATCH_CONTENT exists (unless MATCH_CRITERIA is null or not_null)
