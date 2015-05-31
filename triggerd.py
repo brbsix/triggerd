@@ -327,10 +327,14 @@ class EventHandler:
 
             problems = 0
 
-            test_types = ['arithmetic', 'content', 'status', None, '']
-            arithmetic_criteria = ['eq', 'ge', 'gt', 'le', 'lt', 'ne', None, '']
+            test_types = ['arithmetic', 'content', 'status']
+            arithmetic_criteria = ['eq', 'ge', 'gt', 'le', 'lt', 'ne']
             content_criteria = ['contains', 'does_not_contain', 'matches',
-                                'does_not_match', 'null', 'not_null', None, '']
+                                'does_not_match', 'null', 'not_null']
+
+            # ensure we don't display errors for missing fields
+            for dummylist in [test_types, arithmetic_criteria, content_criteria]:
+                dummylist += [None, '']
 
             required = ['COMMAND', 'EVENT_NAME', 'MATCH_CRITERIA',
                         'STATUS', 'TEST_TYPE']
