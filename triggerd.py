@@ -143,24 +143,24 @@ class EventHandler:
                                extra=self.event.__dict__)
 
                 # ensure STATUS is not already set to triggered
-                if self.event.get('STATUS') == 'triggered':
-                    elogger.error("Event file STATUS not updated (it was already "
-                                  "changed)", extra=self.event.__dict__)
+                if self.event.data.get('STATUS') == 'triggered':
+                    EVENTLOG.error("Event file STATUS not updated (it was alre"
+                                   "ady changed)", extra=self.event.__dict__)
                     return
 
                 # update STATUS to triggered
                 try:
-                    self.event['STATUS'] = 'triggered'
-                    self.event.write()
+                    self.event.data['STATUS'] = 'triggered'
+                    self.event.data.write()
                 except:  # pylint: disable=W0702
                     EVENTLOG.error("Exception while updating STATUS to "
                                    "triggered", extra=self.event.__dict__)
 
                 # # ensure STATUS was set to triggered
                 # try:
-                #     assert self.event.get('STATUS') == 'triggered'
-                #     elogger.info("Event file STATUS successfully updated to "
-                #                  "triggered", extra=self.event.__dict__)
+                #     assert self.event.data.get('STATUS') == 'triggered'
+                #     EVENTLOG.info("Event file STATUS successfully updated to "
+                #                   "triggered", extra=self.event.__dict__)
                 #     return
                 # except AssertionError:
                 #     EVENTLOG.error("Event file STATUS unsuccessfully updated "
@@ -168,9 +168,9 @@ class EventHandler:
                 #     return
 
                 # ensure STATUS was set to triggered
-                if self.event.get('STATUS') == 'triggered':
-                    elogger.info("Event file STATUS successfully updated to "
-                                 "triggered", extra=self.event.__dict__)
+                if self.event.data.get('STATUS') == 'triggered':
+                    EVENTLOG.info("Event file STATUS successfully updated to "
+                                  "triggered", extra=self.event.__dict__)
                     return
                 else:
                     EVENTLOG.error("Event file STATUS unsuccessfully updated "
