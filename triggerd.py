@@ -100,15 +100,15 @@ class EventHandler:
 
                 if status == 0:
 
-                    if self.is_default():
-                        elogger.info("Successfully executed default trigger",
+                    if self.is_default:
+                        EVENTLOG.info("Successfully executed default trigger",
                                       extra=self.event.__dict__)
                     else:
                         EVENTLOG.info("Successfully executed configured "
                                       "trigger", extra=self.event.__dict__)
                     return True
 
-                elif not self.is_default():
+                elif not self.is_default:
 
                     EVENTLOG.error("Failed to execute custom or named trigger",
                                    extra=self.event.__dict__)
