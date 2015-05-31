@@ -312,13 +312,13 @@ class EventHandler:
         def test(self):
             "Execute and evaluate output of COMMAND per TEST_TYPE."""
 
-            output, exit = _bash(self.data.get('COMMAND'))
+            output, status = _bash(self.data.get('COMMAND'))
 
             test_type = self.data.get('TEST_TYPE')
 
             if (test_type == 'arithmetic' and self.arithmetic(output)) or \
                (test_type == 'content' and self.content(output)) or \
-               (test_type == 'status' and self.arithmetic(exit)):
+               (test_type == 'status' and self.arithmetic(status)):
                 return True
 
         def verify(self):  # pylint: disable=R0912
@@ -469,9 +469,9 @@ def _bash(args):
                                stdout=subprocess.PIPE)
 
     output = process.stdout.read().decode().strip()
-    exit = process.wait()
+    status = process.wait()
 
-    return output, exit
+    return output, status
 
 
 def _configure():
