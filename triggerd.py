@@ -4,7 +4,7 @@
 """Trigger an event or notification upon the output of a command"""
 
 __program__ = 'triggerd'
-__version__ = '0.4.4'
+__version__ = '0.4.5'
 
 
 class EventHandler:
