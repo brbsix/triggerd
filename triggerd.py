@@ -44,8 +44,9 @@ class EventHandler:
                 default = "declare -A event && event[EVENT_NAME]='{0}' && " \
                           "EVENT_NAME='{0}' && {1}"
 
-                trigger = "notify-send --icon=notification-message-im --urgency=" \
-                          "critical 'triggerd: {0}' 'We have a trigger event!'"
+                trigger = "notify-send --icon=notification-message-im " \
+                          "--urgency=critical 'triggerd: {0}' 'We have " \
+                          "a trigger event!'"
 
                 event_name = self.event.data.get('EVENT_NAME')
                 trigger_custom = self.event.data.get('TRIGGER_CUSTOM')
@@ -54,27 +55,38 @@ class EventHandler:
                 self.default_string = trigger.format(event_name)
 
                 if trigger_custom:
-                    self.trigger_string = default.format(event_name, trigger_custom)
-                    elogger.info("Configured to use TRIGGER_CUSTOM (%s)", trigger_custom, extra=self.event.__dict__)
+                    self.trigger_string = default.format(event_name,
+                                                         trigger_custom)
+                    EVENTLOG.info("Configured to use TRIGGER_CUSTOM (%s)",
+                                  trigger_custom, extra=self.event.__dict__)
                 elif trigger_named:
                     from configobj import ConfigObj
                     trigger_file = ConfigObj(self.event.config)
                     trigger_definition = trigger_file.get(trigger_named)
                     if trigger_definition:
-                        self.trigger_string = default.format(event_name, trigger_definition)
-                        elogger.info("Configured to use TRIGGER_NAMED '%s' (%s)", trigger_named, trigger_definition, extra=self.event.__dict__)
+                        self.trigger_string = default \
+                            .format(event_name, trigger_definition)
+                        EVENTLOG.info(
+                            "Configured to use TRIGGER_NAMED '%s' (%s)",
+                            trigger_named, trigger_definition,
+                            extra=self.event.__dict__)
                     else:
-                        elogger.info("TRIGGER_NAMED '%s' is not defined in '%s'", trigger_named, self.event.config, extra=self.event.__dict__)
+                        EVENTLOG.info(
+                            "TRIGGER_NAMED '%s' is not defined in '%s'",
+                            trigger_named, self.event.config,
+                            extra=self.event.__dict__)
 
                 # resort to default trigger
                 if self.trigger_string is None:
                     self.trigger_string = self.default_string
-                    elogger.warning("No trigger configured (will use default)", extra=self.event.__dict__)
+                    EVENTLOG.warning(
+                        "No trigger configured (will use default)",
+                        extra=self.event.__dict__)
 
             def execute(self):
                 """Manage execution of event's trigger."""
 
-                elogger.info("Executing trigger (%s)", self.trigger_string,
+                EVENTLOG.info("Executing trigger (%s)", self.trigger_string,
                               extra=self.event.__dict__)
 
                 # update event STATUS upon success
@@ -92,30 +104,30 @@ class EventHandler:
                         elogger.info("Successfully executed default trigger",
                                       extra=self.event.__dict__)
                     else:
-                        elogger.info("Successfully executed configured trigger",
-                                      extra=self.event.__dict__)
+                        EVENTLOG.info("Successfully executed configured "
+                                      "trigger", extra=self.event.__dict__)
                     return True
 
                 elif not self.is_default():
 
-                    elogger.error("Failed to execute custom or named trigger",
+                    EVENTLOG.error("Failed to execute custom or named trigger",
                                    extra=self.event.__dict__)
 
                     _, retry = _bash(self.default_string)
 
                     if retry == 0:
-                        elogger.info("Retry successfully executed default trigger",
-                                      extra=self.event.__dict__)
+                        EVENTLOG.info("Retry successfully executed default "
+                                      "trigger", extra=self.event.__dict__)
                         return True
 
                     else:
-                        elogger.error("Retry failed to execute default trigger",
-                                      extra=self.event.__dict__)
+                        EVENTLOG.error("Retry failed to execute default "
+                                       "trigger", extra=self.event.__dict__)
 
                 else:
 
-                    elogger.error("Failed to execute default trigger",
-                                  extra=self.event.__dict__)
+                    EVENTLOG.error("Failed to execute default trigger",
+                                   extra=self.event.__dict__)
 
                 return False
 
@@ -127,7 +139,8 @@ class EventHandler:
             def writer(self):
                 """Update event's config file upon trigger."""
 
-                elogger.debug("Updating event file STATUS to triggered", extra=self.event.__dict__)
+                EVENTLOG.debug("Updating event file STATUS to triggered",
+                               extra=self.event.__dict__)
 
                 # ensure STATUS is not already set to triggered
                 if self.event.get('STATUS') == 'triggered':
@@ -140,18 +153,18 @@ class EventHandler:
                     self.event['STATUS'] = 'triggered'
                     self.event.write()
                 except:  # pylint: disable=W0702
-                    elogger.error("Exception while updating STATUS to triggered",
-                                  extra=self.event.__dict__)
+                    EVENTLOG.error("Exception while updating STATUS to "
+                                   "triggered", extra=self.event.__dict__)
 
-                # ensure STATUS was set to triggered
+                # # ensure STATUS was set to triggered
                 # try:
                 #     assert self.event.get('STATUS') == 'triggered'
                 #     elogger.info("Event file STATUS successfully updated to "
                 #                  "triggered", extra=self.event.__dict__)
                 #     return
                 # except AssertionError:
-                #     elogger.error("Event file STATUS unsuccessfully updated "
-                #                   "to triggered!", extra=self.event.__dict__)
+                #     EVENTLOG.error("Event file STATUS unsuccessfully updated "
+                #                    "to triggered!", extra=self.event.__dict__)
                 #     return
 
                 # ensure STATUS was set to triggered
@@ -160,13 +173,13 @@ class EventHandler:
                                  "triggered", extra=self.event.__dict__)
                     return
                 else:
-                    elogger.error("Event file STATUS unsuccessfully updated "
-                                  "to triggered!", extra=self.event.__dict__)
+                    EVENTLOG.error("Event file STATUS unsuccessfully updated "
+                                   "to triggered!", extra=self.event.__dict__)
                     return
 
             # def writer(self):
             #     """Update event's config file upon trigger."""
-            #     elogger.debug("Executing writer", extra=self.event.__dict__)
+            #     EVENTLOG.debug("Executing writer", extra=self.event.__dict__)
 
             #     try:
             #         with open(self.event.path) as readfile:
@@ -181,61 +194,60 @@ class EventHandler:
 
             #             with open(self.event.path) as readfile:
             #                 if re.search(r'STATUS(\ ?)=(\ ?)triggered', readfile.read()):
-            #                     elogger.info("Event file STATUS successfully updated to "
+            #                     EVENTLOG.info("Event file STATUS successfully updated to "
             #                                  "triggered", extra=self.event.__dict__)
             #                     return
             #                 else:
-            #                     elogger.error("Event file STATUS unsuccessfully updated "
+            #                     EVENTLOG.error("Event file STATUS unsuccessfully updated "
             #                                   "to triggered!", extra=self.event.__dict__)
             #                     return
             #         else:
-            #             elogger.error("Event file STATUS not updated (it was already "
+            #             EVENTLOG.error("Event file STATUS not updated (it was already "
             #                           "changed)", extra=self.event.__dict__)
             #             return
             #     except:  # pylint: disable=W0702
-            #         elogger.error("Exception while updating STATUS to triggered",
+            #         EVENTLOG.error("Exception while updating STATUS to triggered",
             #                       extra=self.event.__dict__)
-
 
         def _contains(self, match, content):
             """content contains match (match in content)."""
             result = match in content
-            elogger.info("CONTENT TEST | '%s' in '%s' => %s", match, content,
+            EVENTLOG.info("CONTENT TEST | '%s' in '%s' => %s", match, content,
                           result, extra=self.__dict__)
             return result
 
         def _matches(self, match, content):
             """match matches content (match == content)."""
             result = match == content
-            elogger.info("CONTENT TEST | '%s' matches '%s' => %s", match, content,
+            EVENTLOG.info("CONTENT TEST | '%s' matches '%s' => %s", match, content,
                           result, extra=self.__dict__)
             return result
 
         def _notcontains(self, match, content):
             """content does not contain match (match not in content)."""
             result = match not in content
-            elogger.info("CONTENT TEST | '%s' not in '%s' => %s", match, content,
+            EVENTLOG.info("CONTENT TEST | '%s' not in '%s' => %s", match, content,
                           result, extra=self.__dict__)
             return result
 
         def _notmatch(self, match, content):
             """match does not match content (match != content)."""
             result = match != content
-            elogger.info("CONTENT TEST | '%s' does not match '%s' => %s", match,
+            EVENTLOG.info("CONTENT TEST | '%s' does not match '%s' => %s", match,
                           content, result, extra=self.__dict__)
             return result
 
         def _notnull(self, match, content):  # pylint: disable=W0613
             """content is not null (content != '')."""
             result = content != ''
-            elogger.info("CONTENT TEST | '%s' is not null => '%s'", content,
+            EVENTLOG.info("CONTENT TEST | '%s' is not null => '%s'", content,
                           result, extra=self.__dict__)
             return result
 
         def _null(self, match, content):  # pylint: disable=W0613
             """content is null (content == '')."""
             result = content == ''
-            elogger.info("CONTENT TEST | '%s' is null => '%s'", content,
+            EVENTLOG.info("CONTENT TEST | '%s' is null => '%s'", content,
                           result, extra=self.__dict__)
             return result
 
@@ -243,30 +255,32 @@ class EventHandler:
             """Perform an arithmetic evaluation."""
             import operator
 
-            operations = {'eq': operator.eq, 'ge': operator.ge, 'gt': operator.gt,
-                          'le': operator.le, 'lt': operator.lt, 'ne': operator.ne}
+            operations = {
+                'eq': operator.eq, 'ge': operator.ge, 'gt': operator.gt,
+                'le': operator.le, 'lt': operator.lt, 'ne': operator.ne
+                }
 
             criteria = self.data.get('MATCH_CRITERIA')
 
             try:
                 content = int(content)
             except ValueError:
-                elogger.info("'%s' is not an integer (required for arithmetic "
+                EVENTLOG.info("'%s' is not an integer (required for arithmetic "
                               "operations)", content, extra=self.__dict__)
                 return False
 
             try:
                 match = int(self.data.get('MATCH_CONTENT'))
             except ValueError:
-                elogger.error("MATCH_CONTENT must be an integer for arithmetic "
-                              "operations", extra=self.__dict__)
+                EVENTLOG.error("MATCH_CONTENT must be an integer for arithmetic "
+                               "operations", extra=self.__dict__)
                 return False
 
             result = operations[criteria](content, match)
 
             test_type = self.data.get('TEST_TYPE').upper()
 
-            elogger.info("%s TEST | '%s' %s '%s' => %s", test_type, content,
+            EVENTLOG.info("%s TEST | '%s' %s '%s' => %s", test_type, content,
                           criteria, match, result, extra=self.__dict__)
 
             return result
@@ -274,12 +288,14 @@ class EventHandler:
         def content(self, content):
             """Perform a content evaluation."""
 
-            operations = {'contains': self._contains,
-                          'does_not_contain': self._notcontains,
-                          'matches': self._matches,
-                          'does_not_match': self._notmatch,
-                          'null': self._null,
-                          'not_null': self._notnull}
+            operations = {
+                'contains': self._contains,
+                'does_not_contain': self._notcontains,
+                'matches': self._matches,
+                'does_not_match': self._notmatch,
+                'null': self._null,
+                'not_null': self._notnull
+                }
 
             criteria = self.data.get('MATCH_CRITERIA')
             match = self.data.get('MATCH_CONTENT')
@@ -322,15 +338,16 @@ class EventHandler:
             missing = [f for f in required if self.data.get(f) is None or self.data.get(f) is '']
 
             try:
-                # ensure MATCH_CONTENT exists (unless MATCH_CRITERIA is null or not_null
+                # ensure MATCH_CONTENT exists (unless MATCH_CRITERIA is null or not_null)
                 assert self.data.get('MATCH_CONTENT') is not None or \
-                    re.search('^(not_)?null$', self.data.get('MATCH_CRITERIA')) is not None
+                    re.search('^(not_)?null$', self.data.get('MATCH_CRITERIA')) \
+                    is not None
             except AssertionError:
                 missing.append('MATCH_CONTENT')
 
             # identify missing mandatory fields
             if missing:
-                elogger.error("Missing %s", ' '.join(missing),
+                EVENTLOG.error("Missing %s", ' '.join(missing),
                                extra=self.__dict__)
                 problems += 1
 
@@ -338,7 +355,7 @@ class EventHandler:
                 # ensure TEST_TYPE is a valid test type
                 assert self.data.get('TEST_TYPE') in test_types
             except AssertionError:
-                elogger.error("Invalid TEST_TYPE", extra=self.__dict__)
+                EVENTLOG.error("Invalid TEST_TYPE", extra=self.__dict__)
                 problems += 1
 
             # perform verification for arithmetic and status tests
@@ -355,10 +372,11 @@ class EventHandler:
 
                 try:
                     # ensure MATCH_CRITERIA is an arithmetic operation
-                    assert self.data.get('MATCH_CRITERIA') in arithmetic_criteria
+                    assert self.data.get('MATCH_CRITERIA') in \
+                        arithmetic_criteria
                 except AssertionError:
-                    elogger.error("Invalid MATCH_CRITERIA for arithmetic "
-                                      "operations", extra=self.__dict__)
+                    EVENTLOG.error("Invalid MATCH_CRITERIA for arithmetic "
+                                   "operations", extra=self.__dict__)
                     problems += 1
 
             # perform verification for content tests
@@ -368,123 +386,44 @@ class EventHandler:
                     # ensure MATCH_CRITERIA is a content operation
                     assert self.data.get('MATCH_CRITERIA') in content_criteria
                 except AssertionError:
-                    elogger.error("Invalid MATCH_CRITERIA for content operations",
-                                   extra=self.__dict__)
+                    EVENTLOG.error("Invalid MATCH_CRITERIA for content "
+                                   "operations", extra=self.__dict__)
                     problems += 1
 
             # ensure custom and named triggers are not used concurrently
             if self.data.get('TRIGGER_CUSTOM') and self.data.get('TRIGGER_NAMED'):
-                elogger.error("TRIGGER_CUSTOM and TRIGGER_NAMED are both "
-                                  "indicated (choose one or neither)",
-                                  extra=self.__dict__)
+                EVENTLOG.error("TRIGGER_CUSTOM and TRIGGER_NAMED are both "
+                               "indicated (choose one or neither)",
+                               extra=self.__dict__)
                 problems += 1
 
             if problems == 1:
-                elogger.warning("Encountered 1 issue verifying event file",
-                                    extra=self.__dict__)
+                EVENTLOG.warning("Encountered 1 issue verifying event file",
+                                 extra=self.__dict__)
             elif problems >= 2:
-                elogger.warning("Encountered %s issues verifying event file",
-                                    problems, extra=self.__dict__)
+                EVENTLOG.warning("Encountered %s issues verifying event file",
+                                 problems, extra=self.__dict__)
 
             return problems == 0
-
-        # def verify(self):  # pylint: disable=R0912
-        #     """Verify  that an event file is formatted correctly."""
-        #     import re
-
-        #     problems = 0
-
-        #     test_types = ['arithmetic', 'content', 'status', None, '']
-        #     arithmetic_criteria = ['eq', 'ge', 'gt', 'le', 'lt', 'ne', None, '']
-        #     content_criteria = ['contains', 'does_not_contain', 'matches',
-        #                         'does_not_match', 'null', 'not_null', None, '']
-
-        #     required = ['COMMAND', 'EVENT_NAME', 'MATCH_CRITERIA',
-        #                 'STATUS', 'TEST_TYPE']
-
-        #     missing = [f for f in required if self.data.get(f) is None or self.data.get(f) is '']
-
-        #     # check whether MATCH_CONTENT field is necessary
-        #     if not re.search('^(not_)?null$', self.data.get('MATCH_CRITERIA')) \
-        #        and not self.data.get('MATCH_CONTENT'):
-        #         missing.append('MATCH_CONTENT')
-
-        #     # identify missing mandatory fields
-        #     if missing:
-        #         elogger.error("Missing %s", ' '.join(missing),
-        #                        extra=self.__dict__)
-        #         problems += 1
-
-        #     # ensure TEST_TYPE is a valid test type
-        #     if self.data.get('TEST_TYPE') not in test_types:
-        #         elogger.error("Invalid TEST_TYPE", extra=self.__dict__)
-        #         problems += 1
-
-        #     # perform verification of fields for arithmetic and status tests
-        #     if self.data.get('TEST_TYPE') in ('arithmetic', 'status'):
-
-        #         # # ensure MATCH_CONTENT is an integer
-        #         # if self.data.get('MATCH_CONTENT') and not self.data.get('MATCH_CONTENT').lstrip('-').isdigit():
-        #         #     elogger.error("MATCH_CONTENT must be an integer for "
-        #         #                    "arithmetic operations", extra=self.__dict__)
-        #         #     problems += 1
-
-        #         # ensure MATCH_CONTENT is an integer
-        #         if self.data.get('MATCH_CONTENT'):
-        #             try:
-        #                 int(self.data.get('MATCH_CONTENT'))
-        #             except ValueError:
-        #                 elogger.error("MATCH_CONTENT must be an integer for "
-        #                                   "arithmetic operations",
-        #                                   extra=self.__dict__)
-        #                 problems += 1
-
-        #         # ensure MATCH_CRITERIA is an arithmetic operation
-        #         if self.data.get('MATCH_CRITERIA') not in arithmetic_criteria:
-        #             elogger.error("Invalid MATCH_CRITERIA for arithmetic "
-        #                               "operations", extra=self.__dict__)
-        #             problems += 1
-
-        #     # perform verification of fields for content tests
-        #     if self.data.get('TEST_TYPE') == 'content' and self.data.get('MATCH_CRITERIA') not in content_criteria:
-        #         elogger.error("Invalid MATCH_CRITERIA for content operations",
-        #                        extra=self.__dict__)
-        #         problems += 1
-
-        #     # ensure custom and named triggers are not used concurrently
-        #     if self.data.get('TRIGGER_CUSTOM') and self.data.get('TRIGGER_NAMED'):
-        #         elogger.error("TRIGGER_CUSTOM and TRIGGER_NAMED are both "
-        #                           "indicated (choose one or neither)",
-        #                           extra=self.__dict__)
-        #         problems += 1
-
-        #     if problems == 1:
-        #         elogger.warning("Encountered 1 issue verifying event file",
-        #                             extra=self.__dict__)
-        #     elif problems >= 2:
-        #         elogger.warning("Encountered %s issues verifying event file",
-        #                             problems, extra=self.__dict__)
-
-        #     return True if problems == 0 else False
 
     class EventRunner:
         def __init__(self, path, config=None):
             eventfile = EventHandler.EventFile(path, config)
 
-            elogger.info("Processing event", extra=eventfile.__dict__)
+            EVENTLOG.info("Processing event", extra=eventfile.__dict__)
 
             # ensure event is enabled
             if not eventfile.enabled:
 
-                elogger.info("Not enabled (skipping)",
-                                 extra=eventfile.__dict__)
+                EVENTLOG.info("Not enabled (skipping)",
+                              extra=eventfile.__dict__)
                 return
 
             # ensure event verification is successful
             elif not eventfile.verify():
 
-                elogger.info("Failed verification (skipping)",
-                                 extra=eventfile.__dict__)
+                EVENTLOG.info("Failed verification (skipping)",
+                              extra=eventfile.__dict__)
                 return
 
             if eventfile.test():
@@ -497,13 +436,13 @@ class EventHandler:
 
             eventfile = EventHandler.EventFile(path, config)
 
-            elogger.info("Verifying only", extra=eventfile.__dict__)
+            EVENTLOG.info("Verifying only", extra=eventfile.__dict__)
 
             # store the original log level
-            level = elogger.getEffectiveLevel()
+            level = EVENTLOG.getEffectiveLevel()
 
-            # set log level to INFO to ensure verification messages are displayed
-            elogger.setLevel(logging.INFO)
+            # ensure verification messages are displayed
+            EVENTLOG.setLevel(logging.INFO)
 
             status = eventfile.verify()
 
@@ -511,12 +450,12 @@ class EventHandler:
             EventHandler.EventFile.TriggerFile(eventfile)
 
             if status:
-                elogger.info("Verification OK", extra=eventfile.__dict__)
+                EVENTLOG.info("Verification OK", extra=eventfile.__dict__)
             else:
-                elogger.info("Verification NOT OK", extra=eventfile.__dict__)
+                EVENTLOG.info("Verification NOT OK", extra=eventfile.__dict__)
 
             # restore original log level
-            elogger.setLevel(level)
+            EVENTLOG.setLevel(level)
 
 
 def _bash(args):
@@ -548,10 +487,10 @@ def _configure():
     verify = options.verify
 
     level = logging.DEBUG if options.debug else logging.INFO if \
-            options.verbose else logging.WARNING
+        options.verbose else logging.WARNING
 
-    elogger.setLevel(level)
-    slogger.setLevel(level)
+    EVENTLOG.setLevel(level)
+    LOGGER.setLevel(level)
 
     events = GeneratePaths().files(arguments,
                                    access=os.W_OK,
@@ -559,39 +498,39 @@ def _configure():
                                    minsize=0,
                                    recursion=True)
 
-    slogger.info("processing %s events", len(events))
-    slogger.debug("events = %s", events)
-    slogger.debug("verify = %s", verify)
-    slogger.debug("triggerfile = %s", config)
-    slogger.debug("loglevel = %s", level)
+    LOGGER.info("processing %s events", len(events))
+    LOGGER.debug("events = %s", events)
+    LOGGER.debug("verify = %s", verify)
+    LOGGER.debug("triggerfile = %s", config)
+    LOGGER.debug("loglevel = %s", level)
 
     if not events:
-        slogger.error("You have not supplied any valid targets")
-        slogger.error("Try '%s --help' for more information.", __program__)
+        LOGGER.error("You have not supplied any valid targets")
+        LOGGER.error("Try '%s --help' for more information.", __program__)
         sys.exit(1)
 
     EventHandler(events, config, verify)
 
 
 def _logging():
-    """Initialize program and event loggers."""
+    """Initialize program and event LOGGERs."""
     # NOTE: There may be significant room for improvement with the logging
     #       functionality. Is there a way to do it without global?
     import logging
 
-    global elogger
-    elogger = logging.getLogger('event')
+    global EVENTLOG
+    EVENTLOG = logging.getLogger('event')
     estream = logging.StreamHandler()
     eformat = logging.Formatter('[%(basename)s] %(levelname)s: %(message)s')
     estream.setFormatter(eformat)
-    elogger.addHandler(estream)
+    EVENTLOG.addHandler(estream)
 
-    global slogger
-    slogger = logging.getLogger(__program__)
+    global LOGGER
+    LOGGER = logging.getLogger(__program__)
     tstream = logging.StreamHandler()
     tformat = logging.Formatter('(%(name)s) %(levelname)s: %(message)s')
     tstream.setFormatter(tformat)
-    slogger.addHandler(tstream)
+    LOGGER.addHandler(tstream)
 
 
 def _parser():
@@ -611,7 +550,8 @@ def _parser():
         '-f', '--file',
         default=config,
         dest='config',
-        help='indicate a trigger config file to be used (default: %s)' % config)
+        help='indicate a trigger config file to '
+             'be used (default: %s)' % config)
     parser.add_argument(
         '--debug',
         action='store_true',
