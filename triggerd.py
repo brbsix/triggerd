@@ -10,10 +10,10 @@ __version__ = '0.4.4'
 class EventHandler:
 
     def __init__(self, paths, config=None, verify=False):
-        helper = self.EventVerifier if verify else self.EventRunner
+        action = self.EventVerifier if verify else self.EventRunner
 
         for path in paths:
-            helper(path, config)
+            action(path, config)
 
     class EventFile:
         """Manipulate event file configuration."""
