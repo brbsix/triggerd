@@ -3,13 +3,26 @@
 
 """Trigger an event or notification upon the output of a command"""
 
+import logging
+
 __program__ = 'triggerd'
 __version__ = '0.4.5'
 
 
 class EventHandler:
+    """Execute or verify event files."""
+    def __init__(self,
+                 paths,
+                 config=None,
+                 verify=False,
+                 loglevel=logging.WARNING):
 
-    def __init__(self, paths, config=None, verify=False):
+        # configure event logger
+        _eventlogger()
+
+        log = logging.getLogger('event')
+        log.setLevel(loglevel)
+
         action = self.EventVerifier if verify else self.EventRunner
 
         for path in paths:
@@ -40,6 +53,10 @@ class EventHandler:
             def __init__(self, event):
                 """Configure trigger."""
 
+                import configobj
+
+                log = logging.getLogger('event')
+
                 self.event = event
 
                 default = "declare -A event && event[EVENT_NAME]='{0}' && " \
@@ -58,20 +75,22 @@ class EventHandler:
                 if trigger_custom:
                     self.trigger_string = default.format(event_name,
                                                          trigger_custom)
-                    EVENTLOG.info("Configured to use TRIGGER_CUSTOM (%s)",
-                                  trigger_custom, extra=self.event.__dict__)
+                    log.info(
+                        "Configured to use TRIGGER_CUSTOM (%s)",
+                        trigger_custom, extra=self.event.__dict__)
+
                 elif trigger_named:
                     trigger_file = configobj.ConfigObj(self.event.config)
                     trigger_definition = trigger_file.get(trigger_named)
                     if trigger_definition:
                         self.trigger_string = default \
                             .format(event_name, trigger_definition)
-                        EVENTLOG.info(
+                        log.info(
                             "Configured to use TRIGGER_NAMED '%s' (%s)",
                             trigger_named, trigger_definition,
                             extra=self.event.__dict__)
                     else:
-                        EVENTLOG.info(
+                        log.info(
                             "TRIGGER_NAMED '%s' is not defined in '%s'",
                             trigger_named, self.event.config,
                             extra=self.event.__dict__)
@@ -79,15 +98,17 @@ class EventHandler:
                 # resort to default trigger
                 if self.trigger_string is None:
                     self.trigger_string = self.default_string
-                    EVENTLOG.warning(
+                    log.warning(
                         "No trigger configured (will use default)",
                         extra=self.event.__dict__)
 
             def execute(self):
                 """Manage execution of event's trigger."""
 
-                EVENTLOG.info("Executing trigger (%s)", self.trigger_string,
-                              extra=self.event.__dict__)
+                log = logging.getLogger('event')
+                log.info(
+                    "Executing trigger (%s)", self.trigger_string,
+                    extra=self.event.__dict__)
 
                 # update event STATUS upon success
                 if self.helper():
@@ -96,38 +117,40 @@ class EventHandler:
             def helper(self):
                 """Execute event's trigger and return success status."""
 
+                log = logging.getLogger('event')
+
                 _, status = _bash(self.trigger_string)
 
                 if status == 0:
 
                     if self.is_default:
-                        EVENTLOG.info("Successfully executed default trigger",
-                                      extra=self.event.__dict__)
+                        log.info("Successfully executed default trigger",
+                                 extra=self.event.__dict__)
                     else:
-                        EVENTLOG.info("Successfully executed configured "
-                                      "trigger", extra=self.event.__dict__)
+                        log.info("Successfully executed configured trigger",
+                                 extra=self.event.__dict__)
                     return True
 
                 elif not self.is_default:
 
-                    EVENTLOG.error("Failed to execute custom or named trigger",
-                                   extra=self.event.__dict__)
+                    log.error("Failed to execute custom or named trigger",
+                              extra=self.event.__dict__)
 
                     _, retry = _bash(self.default_string)
 
                     if retry == 0:
-                        EVENTLOG.info("Retry successfully executed default "
-                                      "trigger", extra=self.event.__dict__)
+                        log.info("Retry successfully executed default trigger",
+                                 extra=self.event.__dict__)
                         return True
 
                     else:
-                        EVENTLOG.error("Retry failed to execute default "
-                                       "trigger", extra=self.event.__dict__)
+                        log.error("Retry failed to execute default trigger",
+                                  extra=self.event.__dict__)
 
                 else:
 
-                    EVENTLOG.error("Failed to execute default trigger",
-                                   extra=self.event.__dict__)
+                    log.error("Failed to execute default trigger",
+                              extra=self.event.__dict__)
 
                 return False
 
@@ -139,121 +162,117 @@ class EventHandler:
             def writer(self):
                 """Update event's config file upon trigger."""
 
-                EVENTLOG.debug("Updating event file STATUS to triggered",
-                               extra=self.event.__dict__)
+                import configobj
+                import subprocess
+
+                log = logging.getLogger('event')
+
+                log.debug("Updating event file STATUS to triggered",
+                          extra=self.event.__dict__)
 
                 # ensure STATUS is not already set to triggered
                 if self.event.data.get('STATUS') == 'triggered':
-                    EVENTLOG.error("Event file STATUS not updated (it was alre"
-                                   "ady changed)", extra=self.event.__dict__)
+                    log.error("Event file STATUS not updated (it was already "
+                              "changed)", extra=self.event.__dict__)
                     return
 
-                # update STATUS to triggered
-                try:
-                    self.event.data['STATUS'] = 'triggered'
-                    self.event.data.write()
-                except:  # pylint: disable=W0702
-                    EVENTLOG.error("Exception while updating STATUS to "
-                                   "triggered", extra=self.event.__dict__)
+                sedscript = 's/STATUS=enabled/STATUS=triggered/;' \
+                            's/STATUS = enabled/STATUS = triggered/'
 
-                # # ensure STATUS was set to triggered
-                # try:
-                #     assert self.event.data.get('STATUS') == 'triggered'
-                #     EVENTLOG.info("Event file STATUS successfully updated to "
-                #                   "triggered", extra=self.event.__dict__)
-                #     return
-                # except AssertionError:
-                #     EVENTLOG.error("Event file STATUS unsuccessfully updated "
-                #                    "to triggered!", extra=self.event.__dict__)
-                #     return
+                try:
+                    # update STATUS to triggered
+                    subprocess.check_call(
+                        ['sed', '-i', sedscript, self.event.data.filename],
+                        stderr=subprocess.PIPE,
+                        stdout=subprocess.PIPE)
+                except subprocess.CalledProcessError:
+                    log.error("Exception while updating STATUS to triggered",
+                              extra=self.event.__dict__)
+                    return
+
+                try:
+                    # reload event
+                    self.event.data.reload()
+                except configobj.ReloadError:
+                    log.error("Failed to reload event file after update",
+                              extra=self.event.__dict__)
+                    return
 
                 # ensure STATUS was set to triggered
                 if self.event.data.get('STATUS') == 'triggered':
-                    EVENTLOG.info("Event file STATUS successfully updated to "
-                                  "triggered", extra=self.event.__dict__)
+                    log.info("STATUS successfully updated to triggered",
+                             extra=self.event.__dict__)
                     return
                 else:
-                    EVENTLOG.error("Event file STATUS unsuccessfully updated "
-                                   "to triggered!", extra=self.event.__dict__)
+                    log.error("STATUS unsuccessfully updated to triggered!",
+                              extra=self.event.__dict__)
                     return
-
-            # def writer(self):
-            #     """Update event's config file upon trigger."""
-            #     EVENTLOG.debug("Executing writer", extra=self.event.__dict__)
-
-            #     try:
-            #         with open(self.event.path) as readfile:
-            #             original = readfile.read()
-
-            #         edited = re.sub(r'(?<=STATUS)(\ ?)=(\ ?)enabled',
-            #                         '\\1=\\2triggered', original)
-
-            #         if edited != original:
-            #             with open(self.event.path, 'w') as writefile:
-            #                 writefile.write(edited)
-
-            #             with open(self.event.path) as readfile:
-            #                 if re.search(r'STATUS(\ ?)=(\ ?)triggered', readfile.read()):
-            #                     EVENTLOG.info("Event file STATUS successfully updated to "
-            #                                  "triggered", extra=self.event.__dict__)
-            #                     return
-            #                 else:
-            #                     EVENTLOG.error("Event file STATUS unsuccessfully updated "
-            #                                   "to triggered!", extra=self.event.__dict__)
-            #                     return
-            #         else:
-            #             EVENTLOG.error("Event file STATUS not updated (it was already "
-            #                           "changed)", extra=self.event.__dict__)
-            #             return
-            #     except:  # pylint: disable=W0702
-            #         EVENTLOG.error("Exception while updating STATUS to triggered",
-            #                       extra=self.event.__dict__)
 
         def _contains(self, match, content):
             """content contains match (match in content)."""
             result = match in content
-            EVENTLOG.info("CONTENT TEST | '%s' in '%s' => %s", match, content,
-                          result, extra=self.__dict__)
+
+            log = logging.getLogger('event')
+            log.info("CONTENT TEST | '%s' in '%s' => %s", match,
+                     content, result, extra=self.__dict__)
+
             return result
 
         def _matches(self, match, content):
             """match matches content (match == content)."""
             result = match == content
-            EVENTLOG.info("CONTENT TEST | '%s' matches '%s' => %s", match, content,
-                          result, extra=self.__dict__)
+
+            log = logging.getLogger('event')
+            log.info("CONTENT TEST | '%s' matches '%s' => %s", match,
+                     content, result, extra=self.__dict__)
+
             return result
 
         def _notcontains(self, match, content):
             """content does not contain match (match not in content)."""
             result = match not in content
-            EVENTLOG.info("CONTENT TEST | '%s' not in '%s' => %s", match, content,
-                          result, extra=self.__dict__)
+
+            log = logging.getLogger('event')
+            log.info("CONTENT TEST | '%s' not in '%s' => %s", match,
+                     content, result, extra=self.__dict__)
+
             return result
 
         def _notmatch(self, match, content):
             """match does not match content (match != content)."""
             result = match != content
-            EVENTLOG.info("CONTENT TEST | '%s' does not match '%s' => %s", match,
-                          content, result, extra=self.__dict__)
+
+            log = logging.getLogger('event')
+            log.info("CONTENT TEST | '%s' does not match '%s' => %s",
+                     match, content, result, extra=self.__dict__)
+
             return result
 
         def _notnull(self, match, content):  # pylint: disable=W0613
             """content is not null (content != '')."""
             result = content != ''
-            EVENTLOG.info("CONTENT TEST | '%s' is not null => '%s'", content,
-                          result, extra=self.__dict__)
+
+            log = logging.getLogger('event')
+            log.info("CONTENT TEST | '%s' is not null => '%s'",
+                     content, result, extra=self.__dict__)
+
             return result
 
         def _null(self, match, content):  # pylint: disable=W0613
             """content is null (content == '')."""
             result = content == ''
-            EVENTLOG.info("CONTENT TEST | '%s' is null => '%s'", content,
-                          result, extra=self.__dict__)
+
+            log = logging.getLogger('event')
+            log.info("CONTENT TEST | '%s' is null => '%s'", content,
+                     result, extra=self.__dict__)
+
             return result
 
         def arithmetic(self, content):
             """Perform an arithmetic evaluation."""
             import operator
+
+            log = logging.getLogger('event')
 
             operations = {
                 'eq': operator.eq, 'ge': operator.ge, 'gt': operator.gt,
@@ -265,23 +284,26 @@ class EventHandler:
             try:
                 content = int(content)
             except ValueError:
-                EVENTLOG.info("'%s' is not an integer (required for arithmetic "
-                              "operations)", content, extra=self.__dict__)
+                log.info(
+                    "'%s' is not an integer (required for arithmetic "
+                    "operations)", content, extra=self.__dict__)
                 return False
 
             try:
                 match = int(self.data.get('MATCH_CONTENT'))
             except ValueError:
-                EVENTLOG.error("MATCH_CONTENT must be an integer for arithmetic "
-                               "operations", extra=self.__dict__)
+                log.error(
+                    "MATCH_CONTENT must be an integer for arithmetic "
+                    "operations", extra=self.__dict__)
                 return False
 
             result = operations[criteria](content, match)
 
             test_type = self.data.get('TEST_TYPE').upper()
 
-            EVENTLOG.info("%s TEST | '%s' %s '%s' => %s", test_type, content,
-                          criteria, match, result, extra=self.__dict__)
+            log.info(
+                "%s TEST | '%s' %s '%s' => %s", test_type, content,
+                criteria, match, result, extra=self.__dict__)
 
             return result
 
@@ -323,7 +345,10 @@ class EventHandler:
 
         def verify(self):
             """Verify  that an event file is formatted correctly."""
+
             import re
+
+            log = logging.getLogger('event')
 
             problems = 0
 
@@ -351,15 +376,14 @@ class EventHandler:
 
             # identify missing mandatory fields
             if missing:
-                EVENTLOG.error("Missing %s", ' '.join(missing),
-                               extra=self.__dict__)
+                log.error("Missing %s", ' '.join(missing), extra=self.__dict__)
                 problems += 1
 
             try:
                 # ensure TEST_TYPE is a valid test type
                 assert self.data.get('TEST_TYPE') in test_types
             except AssertionError:
-                EVENTLOG.error("Invalid TEST_TYPE", extra=self.__dict__)
+                log.error("Invalid TEST_TYPE", extra=self.__dict__)
                 problems += 1
 
             # perform verification for arithmetic and status tests
@@ -370,8 +394,9 @@ class EventHandler:
                     self.data.get('MATCH_CONTENT') is None or \
                         int(self.data.get('MATCH_CONTENT'))
                 except ValueError:
-                    EVENTLOG.error("MATCH_CONTENT must be an integer for arith"
-                                   "metic operations", extra=self.__dict__)
+                    log.error(
+                        "MATCH_CONTENT must be an integer for arithmetic "
+                        "operations", extra=self.__dict__)
                     problems += 1
 
                 try:
@@ -379,8 +404,9 @@ class EventHandler:
                     assert self.data.get('MATCH_CRITERIA') in \
                         arithmetic_criteria
                 except AssertionError:
-                    EVENTLOG.error("Invalid MATCH_CRITERIA for arithmetic "
-                                   "operations", extra=self.__dict__)
+                    log.error(
+                        "Invalid MATCH_CRITERIA for arithmetic operations",
+                        extra=self.__dict__)
                     problems += 1
 
             # perform verification for content tests
@@ -390,45 +416,47 @@ class EventHandler:
                     # ensure MATCH_CRITERIA is a content operation
                     assert self.data.get('MATCH_CRITERIA') in content_criteria
                 except AssertionError:
-                    EVENTLOG.error("Invalid MATCH_CRITERIA for content "
-                                   "operations", extra=self.__dict__)
+                    log.error("Invalid MATCH_CRITERIA for content operations",
+                              extra=self.__dict__)
                     problems += 1
 
             # ensure custom and named triggers are not used concurrently
             if self.data.get('TRIGGER_CUSTOM') and self.data.get('TRIGGER_NAMED'):
-                EVENTLOG.error("TRIGGER_CUSTOM and TRIGGER_NAMED are both "
-                               "indicated (choose one or neither)",
-                               extra=self.__dict__)
+                log.error(
+                    "TRIGGER_CUSTOM and TRIGGER_NAMED are both indicated "
+                    "(choose one or neither)", extra=self.__dict__)
                 problems += 1
 
             if problems == 1:
-                EVENTLOG.warning("Encountered 1 issue verifying event file",
-                                 extra=self.__dict__)
+                log.warning("Encountered 1 issue verifying event file",
+                            extra=self.__dict__)
             elif problems >= 2:
-                EVENTLOG.warning("Encountered %s issues verifying event file",
-                                 problems, extra=self.__dict__)
+                log.warning("Encountered %s issues verifying event file",
+                            problems, extra=self.__dict__)
 
             return problems == 0
 
     class EventRunner:
         """Execute event file."""
         def __init__(self, path, config=None):
+
+            log = logging.getLogger('event')
+
             eventfile = EventHandler.EventFile(path, config)
 
-            EVENTLOG.info("Processing event", extra=eventfile.__dict__)
+            log.info("Processing event", extra=eventfile.__dict__)
 
             # ensure event is enabled
             if not eventfile.enabled:
 
-                EVENTLOG.info("Not enabled (skipping)",
-                              extra=eventfile.__dict__)
+                log.info("Not enabled (skipping)", extra=eventfile.__dict__)
                 return
 
             # ensure event verification is successful
             elif not eventfile.verify():
 
-                EVENTLOG.info("Failed verification (skipping)",
-                              extra=eventfile.__dict__)
+                log.info("Failed verification (skipping)",
+                         extra=eventfile.__dict__)
                 return
 
             if eventfile.test():
@@ -438,17 +466,18 @@ class EventHandler:
     class EventVerifier:
         """Verify event file."""
         def __init__(self, path, config=None):
-            import logging
+
+            log = logging.getLogger('event')
 
             eventfile = EventHandler.EventFile(path, config)
 
-            EVENTLOG.info("Verifying only", extra=eventfile.__dict__)
+            log.info("Verifying only", extra=eventfile.__dict__)
 
             # store the original log level
-            level = EVENTLOG.getEffectiveLevel()
+            level = log.getEffectiveLevel()
 
             # ensure verification messages are displayed
-            EVENTLOG.setLevel(logging.INFO)
+            log.setLevel(logging.INFO)
 
             status = eventfile.verify()
 
@@ -456,12 +485,12 @@ class EventHandler:
             EventHandler.EventFile.TriggerFile(eventfile)
 
             if status:
-                EVENTLOG.info("Verification OK", extra=eventfile.__dict__)
+                log.info("Verification OK", extra=eventfile.__dict__)
             else:
-                EVENTLOG.info("Verification NOT OK", extra=eventfile.__dict__)
+                log.info("Verification NOT OK", extra=eventfile.__dict__)
 
             # restore original log level
-            EVENTLOG.setLevel(level)
+            log.setLevel(level)
 
 
 def _bash(args):
@@ -480,66 +509,20 @@ def _bash(args):
     return output, status
 
 
-def _configure():
-    """Prepare initial configuration."""
-    import logging
-    import os
-    import sys
-    from batchpath import GeneratePaths
+def _eventlogger():
+    """Configure event logger."""
 
-    options, arguments = _parser()
+    eventlogger = logging.getLogger('event')
 
-    config = options.config
-    verify = options.verify
-
-    level = logging.DEBUG if options.debug else logging.INFO if \
-        options.verbose else logging.WARNING
-
-    EVENTLOG.setLevel(level)
-    LOGGER.setLevel(level)
-
-    events = GeneratePaths().files(arguments,
-                                   access=os.W_OK,
-                                   extensions=['conf', 'txt'],
-                                   minsize=0,
-                                   recursion=True)
-
-    LOGGER.info("processing %s events", len(events))
-    LOGGER.debug("events = %s", events)
-    LOGGER.debug("verify = %s", verify)
-    LOGGER.debug("triggerfile = %s", config)
-    LOGGER.debug("loglevel = %s", level)
-
-    if not events:
-        LOGGER.error("You have not supplied any valid targets")
-        LOGGER.error("Try '%s --help' for more information.", __program__)
-        sys.exit(1)
-
-    EventHandler(events, config, verify)
+    # ensure logger is not reconfigured
+    if not eventlogger.hasHandlers():
+        stream = logging.StreamHandler()
+        formatter = logging.Formatter('[%(basename)s] %(levelname)s: %(message)s')
+        stream.setFormatter(formatter)
+        eventlogger.addHandler(stream)
 
 
-def _logging():
-    """Initialize program and event LOGGERs."""
-    # NOTE: There may be significant room for improvement with the logging
-    #       functionality. Is there a way to do it without global?
-    import logging
-
-    global EVENTLOG
-    EVENTLOG = logging.getLogger('event')
-    estream = logging.StreamHandler()
-    eformat = logging.Formatter('[%(basename)s] %(levelname)s: %(message)s')
-    estream.setFormatter(eformat)
-    EVENTLOG.addHandler(estream)
-
-    global LOGGER
-    LOGGER = logging.getLogger(__program__)
-    tstream = logging.StreamHandler()
-    tformat = logging.Formatter('(%(name)s) %(levelname)s: %(message)s')
-    tstream.setFormatter(tformat)
-    LOGGER.addHandler(tstream)
-
-
-def _parser():
+def _parser(args):
     """Parse script arguments and options."""
     import argparse
     import os
@@ -587,16 +570,62 @@ def _parser():
         help=argparse.SUPPRESS,
         nargs='*')
 
-    options = parser.parse_args()
+    options = parser.parse_args(args)
     arguments = options.targets[0]
 
     return options, arguments
 
 
-def main():
-    """Start application."""
-    _logging()
-    _configure()
+def _scriptlogger():
+    """Configure program logger."""
+
+    scriptlogger = logging.getLogger(__program__)
+
+    # ensure logger is not reconfigured
+    if not scriptlogger.hasHandlers():
+        stream = logging.StreamHandler()
+        formatter = logging.Formatter('(%(name)s) %(levelname)s: %(message)s')
+        stream.setFormatter(formatter)
+        scriptlogger.addHandler(stream)
+
+
+def main(args=None):
+    """Start and configure application."""
+
+    import os
+    import sys
+    from batchpath import GeneratePaths
+
+    options, arguments = _parser(args)
+
+    # determine log level
+    loglevel = logging.DEBUG if options.debug else logging.INFO if \
+        options.verbose else logging.WARNING
+
+    # configure script logger
+    _scriptlogger()
+
+    log = logging.getLogger(__program__)
+    log.setLevel(loglevel)
+
+    events = GeneratePaths().files(arguments,
+                                   access=os.W_OK,
+                                   extensions=['conf', 'txt'],
+                                   minsize=0,
+                                   recursion=True)
+
+    log.info("processing %s events", len(events))
+    log.debug("events = %s", events)
+    log.debug("verify = %s", options.verify)
+    log.debug("triggerfile = %s", options.config)
+    log.debug("loglevel = %s", loglevel)
+
+    if not events:
+        log.error("You have not supplied any valid targets")
+        log.error("Try '%s --help' for more information.", __program__)
+        sys.exit(1)
+
+    EventHandler(events, options.config, options.verify, loglevel)
 
 
 if __name__ == '__main__':
