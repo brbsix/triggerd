@@ -321,7 +321,7 @@ class EventHandler:
                (test_type == 'status' and self.arithmetic(status)):
                 return True
 
-        def verify(self):  # pylint: disable=R0912
+        def verify(self):
             """Verify  that an event file is formatted correctly."""
             import re
 
