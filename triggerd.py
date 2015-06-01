@@ -16,7 +16,7 @@ class EventHandler:
             action(path, config)
 
     class EventFile:
-        """Manipulate event file configuration."""
+        """Manipulate event file."""
         def __init__(self, path, config=None):
             import os
             from configobj import ConfigObj
@@ -435,6 +435,7 @@ class EventHandler:
                 trigger.execute()
 
     class EventVerifier:
+        """Verify event file."""
         def __init__(self, path, config=None):
             import logging
 
