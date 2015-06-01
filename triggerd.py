@@ -411,6 +411,7 @@ class EventHandler:
             return problems == 0
 
     class EventRunner:
+        """Execute event file."""
         def __init__(self, path, config=None):
             eventfile = EventHandler.EventFile(path, config)
 
