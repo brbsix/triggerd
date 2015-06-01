@@ -18,8 +18,9 @@ class EventHandler:
     class EventFile:
         """Manipulate event file."""
         def __init__(self, path, config=None):
+
+            import configobj
             import os
-            from configobj import ConfigObj
 
             # event file path
             self.path = path
@@ -28,7 +29,7 @@ class EventHandler:
             self.basename = os.path.basename(self.path)
 
             # open event as a config file
-            self.data = ConfigObj(self.path)
+            self.data = configobj.ConfigObj(self.path)
 
             # trigger config file path
             self.config = config or "{0}/.config/scripts/{1}/triggers.conf" \
@@ -60,8 +61,7 @@ class EventHandler:
                     EVENTLOG.info("Configured to use TRIGGER_CUSTOM (%s)",
                                   trigger_custom, extra=self.event.__dict__)
                 elif trigger_named:
-                    from configobj import ConfigObj
-                    trigger_file = ConfigObj(self.event.config)
+                    trigger_file = configobj.ConfigObj(self.event.config)
                     trigger_definition = trigger_file.get(trigger_named)
                     if trigger_definition:
                         self.trigger_string = default \
