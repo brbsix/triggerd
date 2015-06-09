@@ -6,7 +6,7 @@
 import logging
 
 __program__ = 'triggerd'
-__version__ = '0.4.6'
+__version__ = '0.4.7'
 
 
 class EventHandler:
