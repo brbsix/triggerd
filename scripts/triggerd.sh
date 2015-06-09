@@ -141,7 +141,7 @@ if (( $# == 0 )); then
     exit 1
 elif (( $# == 1 )) && [[ $1 =~ ^(-h|--help)$ ]]; then
     echo "Usage: $PROGRAM <event files|folders>"
-    echo "Show notifications based on custom recurring events."
+    echo "Trigger an event or notification upon the output of a command."
     echo
     echo "  --verbose              show event execution details"
     echo "  --verify               verify event files without execution"
