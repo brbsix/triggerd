@@ -15,13 +15,11 @@ class EventHandler:
                  paths,
                  config=None,
                  verify=False,
+                 logfile=None,
                  loglevel=logging.WARNING):
 
         # configure event logger
-        _eventlogger()
-
-        log = logging.getLogger('event')
-        log.setLevel(loglevel)
+        _eventlogger(logfile, loglevel)
 
         action = self.EventVerifier if verify else self.EventRunner
 
@@ -509,17 +507,30 @@ def _bash(args):
     return output, status
 
 
-def _eventlogger():
+def _eventlogger(logfile=None, loglevel=logging.WARNING):
     """Configure event logger."""
 
     eventlogger = logging.getLogger('event')
 
     # ensure logger is not reconfigured
     if not eventlogger.hasHandlers():
-        stream = logging.StreamHandler()
-        formatter = logging.Formatter('[%(basename)s] %(levelname)s: %(message)s')
-        stream.setFormatter(formatter)
-        eventlogger.addHandler(stream)
+
+        # set log level
+        eventlogger.setLevel(loglevel)
+
+        formatter = logging.Formatter(
+            '[%(basename)s] %(levelname)s: %(message)s')
+
+        # configure terminal log
+        streamhandler = logging.StreamHandler()
+        streamhandler.setFormatter(formatter)
+        eventlogger.addHandler(streamhandler)
+
+        # configure log file (if necessary)
+        if logfile is not None:
+            filehandler = logging.FileHandler(logfile)
+            filehandler.setFormatter(formatter)
+            eventlogger.addHandler(filehandler)
 
 
 def _parser(args):
@@ -546,6 +557,10 @@ def _parser(args):
         action='store_true',
         dest='debug',
         help='set the logging level to debug')
+    parser.add_argument(
+        '-l', '--log',
+        dest='logfile',
+        help='indicate log file destination')
     parser.add_argument(
         '--verbose',
         action='store_true',
@@ -576,17 +591,29 @@ def _parser(args):
     return options, arguments
 
 
-def _scriptlogger():
+def _scriptlogger(logfile=None, loglevel=logging.WARNING):
     """Configure program logger."""
 
     scriptlogger = logging.getLogger(__program__)
 
     # ensure logger is not reconfigured
     if not scriptlogger.hasHandlers():
-        stream = logging.StreamHandler()
+
+        # set log level
+        scriptlogger.setLevel(loglevel)
+
         formatter = logging.Formatter('(%(name)s) %(levelname)s: %(message)s')
-        stream.setFormatter(formatter)
-        scriptlogger.addHandler(stream)
+
+        # configure terminal log
+        streamhandler = logging.StreamHandler()
+        streamhandler.setFormatter(formatter)
+        scriptlogger.addHandler(streamhandler)
+
+        # configure log file (if necessary)
+        if logfile is not None:
+            filehandler = logging.FileHandler(logfile)
+            filehandler.setFormatter(formatter)
+            scriptlogger.addHandler(filehandler)
 
 
 def main(args=None):
@@ -599,14 +626,13 @@ def main(args=None):
     options, arguments = _parser(args)
 
     # determine log level
-    loglevel = logging.DEBUG if options.debug else logging.INFO if \
+    options.loglevel = logging.DEBUG if options.debug else logging.INFO if \
         options.verbose else logging.WARNING
 
     # configure script logger
-    _scriptlogger()
+    _scriptlogger(options.logfile, options.loglevel)
 
     log = logging.getLogger(__program__)
-    log.setLevel(loglevel)
 
     events = GeneratePaths().files(arguments,
                                    access=os.W_OK,
@@ -618,14 +644,19 @@ def main(args=None):
     log.debug("events = %s", events)
     log.debug("verify = %s", options.verify)
     log.debug("triggerfile = %s", options.config)
-    log.debug("loglevel = %s", loglevel)
+    log.debug("logfile = %s", options.logfile)
+    log.debug("loglevel = %s", options.loglevel)
 
     if not events:
         log.error("You have not supplied any valid targets")
         log.error("Try '%s --help' for more information.", __program__)
         sys.exit(1)
 
-    EventHandler(events, options.config, options.verify, loglevel)
+    EventHandler(events,
+                 options.config,
+                 options.verify,
+                 options.logfile,
+                 options.loglevel)
 
 
 if __name__ == '__main__':
