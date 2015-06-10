@@ -4,7 +4,7 @@
 
 
 PROGRAM="${0##*/}"
-CONFIG="$HOME/.config/scripts/$PROGRAM/triggers.conf"
+CONFIG="$HOME/.config/scripts/${PROGRAM%.*}/triggers.conf"
 DEFAULT_TRIGGER='notify-send --icon=notification-message-im --urgency=critical "triggerd: $EVENT_NAME" "We have a trigger event!"'
 
 
