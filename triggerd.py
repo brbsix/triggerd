@@ -57,8 +57,13 @@ class EventHandler:
 
                 self.event = event
 
-                default = "declare -A event && event[EVENT_NAME]='{0}' && " \
-                          "EVENT_NAME='{0}' && {1}"
+                default = "declare -A event\n" \
+                          "EVENT_NAME=$(cat <<_EOF\n" \
+                          "{0}\n" \
+                          "_EOF\n" \
+                          ")\n" \
+                          "event[EVENT_NAME]=$EVENT_NAME\n" \
+                          "{1}"
 
                 trigger = "notify-send --icon=notification-message-im " \
                           "--urgency=critical 'triggerd: {0}' 'We have " \
