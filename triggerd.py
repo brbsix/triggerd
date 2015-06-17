@@ -117,9 +117,7 @@ class EventHandler:
 
                 log = logging.getLogger('event')
 
-                _, status = _bash(self.trigger_string)
-
-                if status == 0:
+                if _getstatus(self.trigger_string) == 0:
 
                     if self.is_default:
                         log.info("Successfully executed default trigger",
@@ -134,9 +132,7 @@ class EventHandler:
                     log.error("Failed to execute custom or named trigger",
                               extra=self.event.__dict__)
 
-                    _, retry = _bash(self.default_string)
-
-                    if retry == 0:
+                    if _getstatus(self.default_string) == 0:
                         log.info("Retry successfully executed default trigger",
                                  extra=self.event.__dict__)
                         return True
@@ -332,7 +328,7 @@ class EventHandler:
         def test(self):
             "Execute and evaluate output of COMMAND per TEST_TYPE."""
 
-            output, status = _bash(self.data.get('COMMAND'))
+            status, output = _getstatusoutput(self.data.get('COMMAND'))
 
             test_type = self.data.get('TEST_TYPE')
 
@@ -491,22 +487,6 @@ class EventHandler:
             log.setLevel(level)
 
 
-def _bash(args):
-    """Execute bash command returning output and exit status."""
-    import subprocess
-
-    process = subprocess.Popen(args,
-                               executable='bash',
-                               shell=True,
-                               stderr=subprocess.PIPE,
-                               stdout=subprocess.PIPE)
-
-    output = process.stdout.read().decode().strip()
-    status = process.wait()
-
-    return output, status
-
-
 def _eventlogger(logfile=None, loglevel=logging.WARNING):
     """Configure event logger."""
 
@@ -531,6 +511,33 @@ def _eventlogger(logfile=None, loglevel=logging.WARNING):
             filehandler = logging.FileHandler(logfile)
             filehandler.setFormatter(formatter)
             eventlogger.addHandler(filehandler)
+
+
+def _getstatus(args):
+    """Execute bash command returning exit status."""
+    import subprocess
+
+    return subprocess.call(args,
+                           executable='bash',
+                           shell=True,
+                           stderr=subprocess.PIPE,
+                           stdout=subprocess.PIPE)
+
+
+def _getstatusoutput(args):
+    """Execute bash command returning output and exit status."""
+    import subprocess
+
+    process = subprocess.Popen(args,
+                               executable='bash',
+                               shell=True,
+                               stderr=subprocess.PIPE,
+                               stdout=subprocess.PIPE)
+
+    output = process.stdout.read().decode().strip()
+    status = process.wait()
+
+    return status, output
 
 
 def _parser(args):
