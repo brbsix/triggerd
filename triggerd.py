@@ -503,18 +503,20 @@ def _eventlogger(logfile=None, loglevel=logging.WARNING):
         # set log level
         eventlogger.setLevel(loglevel)
 
-        formatter = logging.Formatter(
-            '[%(basename)s] %(levelname)s: %(message)s')
+        fmt = '[%(basename)s] %(levelname)s: %(message)s'
 
         # configure terminal log
         streamhandler = logging.StreamHandler()
-        streamhandler.setFormatter(formatter)
+        streamhandler.setFormatter(logging.Formatter(fmt))
         eventlogger.addHandler(streamhandler)
 
         # configure log file (if necessary)
         if logfile is not None:
+            fileformatter = logging.Formatter(
+                '%(asctime)s.%(msecs)03d ' + fmt,
+                '%Y-%m-%d %H:%M:%S')
             filehandler = logging.FileHandler(logfile)
-            filehandler.setFormatter(formatter)
+            filehandler.setFormatter(fileformatter)
             eventlogger.addHandler(filehandler)
 
 
@@ -614,17 +616,20 @@ def _scriptlogger(logfile=None, loglevel=logging.WARNING):
         # set log level
         scriptlogger.setLevel(loglevel)
 
-        formatter = logging.Formatter('(%(name)s) %(levelname)s: %(message)s')
+        fmt = '(%(name)s) %(levelname)s: %(message)s'
 
         # configure terminal log
         streamhandler = logging.StreamHandler()
-        streamhandler.setFormatter(formatter)
+        streamhandler.setFormatter(logging.Formatter(fmt))
         scriptlogger.addHandler(streamhandler)
 
         # configure log file (if necessary)
         if logfile is not None:
+            fileformatter = logging.Formatter(
+                '%(asctime)s.%(msecs)03d ' + fmt,
+                '%Y-%m-%d %H:%M:%S')
             filehandler = logging.FileHandler(logfile)
-            filehandler.setFormatter(formatter)
+            filehandler.setFormatter(fileformatter)
             scriptlogger.addHandler(filehandler)
 
 
