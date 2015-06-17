@@ -352,8 +352,8 @@ class EventHandler:
                                 'does_not_match', 'null', 'not_null']
 
             # ensure we don't display errors for missing fields
-            for dummylist in [test_types, arithmetic_criteria, content_criteria]:
-                dummylist += [None, '']
+            for dummy in [test_types, arithmetic_criteria, content_criteria]:
+                dummy += [None, '']
 
             required = ['COMMAND', 'EVENT_NAME', 'MATCH_CRITERIA',
                         'STATUS', 'TEST_TYPE']
