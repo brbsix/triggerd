@@ -65,17 +65,43 @@ Event Files
 
 FYI: Basic documentation (sample event file and trigger template file) is installed to *$PREFIX/share/triggerd/examples*
 
-Here is a sample event file:
+Here is a sample event file that triggers when *google.com* is not accessible via ``curl``:
 
 ::
 
-  COMMAND=curl -s google.com | grep -q google
-  EVENT_NAME=Google
+  COMMAND=curl -sL google.com
+  EVENT_NAME=Google Accessibility
   MATCH_CONTENT=0
-  MATCH_CRITERIA=eq
+  MATCH_CRITERIA=ne
   STATUS=enabled
   TEST_TYPE=status
-  TRIGGER_CUSTOM=notify-send "Google is alive!"
+  TRIGGER_CUSTOM=notify-send --urgency=critical "$EVENT_NAME" "Google is not accessible!"
+
+Here is a sample event file that triggers when the *google.com* homepage source code contains the word **surprise**:
+
+::
+
+  COMMAND=curl -sL google.com
+  EVENT_NAME=Google Surprise
+  MATCH_CONTENT=surprise
+  MATCH_CRITERIA=contains
+  STATUS=enabled
+  TEST_TYPE=content
+  TRIGGER_CUSTOM=notify-send --urgency=critical "$EVENT_NAME" "Google contains a surprise!"
+
+Here is a sample event file that triggers when */tmp* is greater than or equal to 10M in size:
+
+::
+
+  COMMAND=du -ms /tmp | cut -f1
+  EVENT_NAME=Size Check
+  MATCH_CONTENT=10
+  MATCH_CRITERIA=ge
+  STATUS=enabled
+  TEST_TYPE=arithmetic
+  TRIGGER_CUSTOM=notify-send --urgency=critical "$EVENT_NAME" "/tmp is >= 10M in size!"
+
+.. Here is a sample event file:
 
 **TEST_TYPE** options:
 
