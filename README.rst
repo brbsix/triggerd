@@ -77,7 +77,7 @@ Here is a sample event file that triggers when *google.com* is not accessible vi
   TEST_TYPE=status
   TRIGGER_CUSTOM=notify-send --urgency=critical "$EVENT_NAME" "Google is not accessible!"
 
-Here is a sample event file that triggers when the *google.com* homepage source code contains the word **surprise**:
+Here is a sample event file that triggers when the *google.com* homepage source code contains the word *surprise*:
 
 ::
 
