@@ -58,9 +58,9 @@ class EventHandler:
                 self.event = event
 
                 default = "declare -A event\n" \
-                          "EVENT_NAME=$(cat <<_EOF\n" \
+                          "EVENT_NAME=$(cat <<'__EOF__'\n" \
                           "{0}\n" \
-                          "_EOF\n" \
+                          "__EOF__\n" \
                           ")\n" \
                           "event[EVENT_NAME]=$EVENT_NAME\n" \
                           "{1}"
