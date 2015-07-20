@@ -74,6 +74,7 @@ class EventHandler:
                 trigger_named = self.event.data.get('TRIGGER_NAMED')
 
                 self.default_string = trigger.format(event_name)
+                self.trigger_string = None
 
                 if trigger_custom:
                     self.trigger_string = default.format(event_name,
