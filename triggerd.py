@@ -41,7 +41,7 @@ class EventHandler:
 
             # open event as a config file
             self.data = configobj.ConfigObj(
-                self.path, interpolation=False, list_value=False)
+                self.path, interpolation=False, list_values=False)
 
             # trigger config file path
             self.config = config or "{0}/.config/scripts/{1}/triggers.conf" \
@@ -94,7 +94,7 @@ class EventHandler:
                 elif trigger_named:
                     trigger_file = configobj.ConfigObj(self.event.config,
                                                        interpolation=False,
-                                                       list_value=False)
+                                                       list_values=False)
                     trigger_definition = trigger_file.get(trigger_named)
                     if trigger_definition:
                         self.trigger_string = default.format(
