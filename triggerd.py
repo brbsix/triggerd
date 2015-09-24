@@ -63,13 +63,19 @@ class EventHandler:
                           "__EOF__\n" \
                           ")\n" \
                           "event[EVENT_NAME]=$EVENT_NAME\n" \
-                          "{1}"
+                          "MATCH_CONTENT=$(cat <<'__EOF__'\n" \
+                          "{1}\n" \
+                          "__EOF__\n" \
+                          ")\n" \
+                          "event[MATCH_CONTENT]=$MATCH_CONTENT\n" \
+                          "{2}"
 
                 trigger = "notify-send --icon=notification-message-im " \
                           "--urgency=critical 'triggerd: {0}' 'We have " \
                           "a trigger event!'"
 
                 event_name = self.event.data.get('EVENT_NAME')
+                match_content = self.event.data.get('MATCH_CONTENT')
                 trigger_custom = self.event.data.get('TRIGGER_CUSTOM')
                 trigger_named = self.event.data.get('TRIGGER_NAMED')
 
@@ -78,6 +84,7 @@ class EventHandler:
 
                 if trigger_custom:
                     self.trigger_string = default.format(event_name,
+                                                         match_content,
                                                          trigger_custom)
                     log.info(
                         "Configured to use TRIGGER_CUSTOM (%s)",
@@ -87,8 +94,8 @@ class EventHandler:
                     trigger_file = configobj.ConfigObj(self.event.config)
                     trigger_definition = trigger_file.get(trigger_named)
                     if trigger_definition:
-                        self.trigger_string = default \
-                            .format(event_name, trigger_definition)
+                        self.trigger_string = default.format(
+                            event_name, match_content, trigger_definition)
                         log.info(
                             "Configured to use TRIGGER_NAMED '%s' (%s)",
                             trigger_named, trigger_definition,
