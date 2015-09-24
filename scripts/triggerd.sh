@@ -260,7 +260,7 @@ for event_file in "${events[@]}"; do
         eval "$DEFAULT_TRIGGER" &>/dev/null
     fi
 
-    if hash bash-config 2>/dev/null; then
+    if hash bash-config &>/dev/null; then
         bash-config "$event_file" STATUS triggered &>/dev/null
     else
         sed -i 's/STATUS=enabled/STATUS=triggered/;s/STATUS = enabled/STATUS = triggered/' "$event_file"
