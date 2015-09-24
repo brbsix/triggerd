@@ -16,7 +16,7 @@ eventlog(){
 load_event(){
     unset event
     declare -gA event
-    event[triggered]=false
+    event[triggered]=0
     event[FILENAME]=${event_file##*/}
     while IFS= read -r line; do
         local parameter=${line%%=*}
@@ -41,7 +41,7 @@ loghandler(){
         loglevel=10
     fi
 
-    if [[ $option_verbose = true ]]; then
+    if (( option_verbose == 1 )); then
         setlevel=20
     else
         setlevel=30
@@ -151,9 +151,9 @@ fi
 events=()
 for arg in "${@}"; do
     if [[ $arg = --verbose ]]; then
-        option_verbose=true
+        option_verbose=1
     elif [[ $arg = --verify ]]; then
-        option_verify=true
+        option_verify=1
     elif [[ -f $arg ]]; then
         events+=("$arg")
     elif [[ -d $arg ]]; then
@@ -178,15 +178,15 @@ for event_file in "${events[@]}"; do
 
     load_event
 
-    if [[ $option_verify = true ]]; then
+    if (( option_verify == 1 )); then
         eventlog INFO "${event[FILENAME]}" "Verifying only"
-        option_verbose=true
+        option_verbose=1
         if verify_event; then
             eventlog INFO "${event[FILENAME]}" "Verification OK"
         else
             eventlog INFO "${event[FILENAME]}" "Verification NOT OK"
         fi
-        option_verbose=false
+        option_verbose=0
         prepare_trigger
         continue
     elif [[ ${event[STATUS]} != enabled ]]; then
@@ -204,35 +204,35 @@ for event_file in "${events[@]}"; do
     # compare command output with match content (per match criteria)
     if [[ ${event[TEST_TYPE]} = arithmetic ]]; then
         if [[ ${event[command_output]} =~ ^-?[0-9]+$ ]] && eval [[ ${event[command_output]} -${event[MATCH_CRITERIA]} ${event[MATCH_CONTENT]} ]]; then
-            event[triggered]=true
+            event[triggered]=1
         fi
     elif [[ ${event[TEST_TYPE]} = content ]]; then
         if [[ ${event[MATCH_CRITERIA]} = contains ]]; then
             grep -q "${event[MATCH_CONTENT]}" <<<"${event[command_output]}" &>/dev/null
             if (( $? == 0 )); then
-                event[triggered]=true
+                event[triggered]=1
             elif (( $? > 1 )); then
                 eventlog ERROR "${event[FILENAME]}" "grep experienced an unknown error handling command output"
             fi
         elif [[ ${event[MATCH_CRITERIA]} = does_not_contain ]]; then
             grep -q "${event[MATCH_CONTENT]}" <<<"${event[command_output]}" &>/dev/null
             if (( $? == 1 )); then
-                event[triggered]=true
+                event[triggered]=1
             elif (( $? > 1 )); then
                 eventlog ERROR "${event[FILENAME]}" "grep experienced an unknown error handling command output"
             fi
         elif [[ ${event[MATCH_CRITERIA]} = matches ]]; then
-            [[ ${event[command_output]} = "${event[MATCH_CONTENT]}" ]] && event[triggered]=true
+            [[ ${event[command_output]} = "${event[MATCH_CONTENT]}" ]] && event[triggered]=1
         elif [[ ${event[MATCH_CRITERIA]} = does_not_match ]]; then
-            [[ ${event[command_output]} != "${event[MATCH_CONTENT]}" ]] && event[triggered]=true
+            [[ ${event[command_output]} != "${event[MATCH_CONTENT]}" ]] && event[triggered]=1
         elif [[ ${event[MATCH_CRITERIA]} = null ]]; then
-            [[ -z ${event[command_output]} ]] && event[triggered]=true
+            [[ -z ${event[command_output]} ]] && event[triggered]=1
         elif [[ ${event[MATCH_CRITERIA]} = not_null ]]; then
-            [[ -n ${event[command_output]} ]] && event[triggered]=true
+            [[ -n ${event[command_output]} ]] && event[triggered]=1
         fi
     elif [[ ${event[TEST_TYPE]} = status ]]; then
         if eval [[ ${event[exit]} -${event[MATCH_CRITERIA]} ${event[MATCH_CONTENT]} ]]; then
-            event[triggered]=true
+            event[triggered]=1
         fi
     fi
 
@@ -242,11 +242,11 @@ for event_file in "${events[@]}"; do
         eventlog INFO "${event[FILENAME]}" "\${event[$index]}=${event[$index]}"
     done
 
-    if [[ ${event[triggered]} != true ]]; then
+    if (( ${event[triggered]} == 1 )); then
+        eventlog INFO "${event[FILENAME]}" "Trigger conditions are met"
+    else
         eventlog INFO "${event[FILENAME]}" "Trigger conditions not met"
         continue
-    else
-        eventlog INFO "${event[FILENAME]}" "Trigger conditions are met"
     fi
 
     prepare_trigger
