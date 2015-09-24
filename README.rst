@@ -3,7 +3,7 @@ About
 
 triggerd is a sysadmin/automation tool used to trigger an event or notification upon the output of a command.
 
-An event file containing the trigger criteria is created. Ideally, you'll create an entry in cron to execute ``triggerd EVENTFOLDER`` at a regular interval. If the command status or output matches the trigger criteria, a trigger event or notification is executed and the event file is marked triggered.
+An event file containing the trigger criteria is created. Ideally, you'll create a cron entry to execute ``triggerd EVENTFOLDER`` at a regular interval. If the command status or output matches the trigger criteria, a trigger event or notification is executed and the event file is marked triggered.
 
 triggerd is perfect for querying a webpage for matching text or anything of the sort. I originally created it for use with a modified version of urlwatch to notify me upon certain changes to webpages, however the potential uses are limitless.
 
