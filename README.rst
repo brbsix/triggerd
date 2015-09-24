@@ -101,8 +101,6 @@ Here is a sample event file that triggers when */tmp* is greater than or equal t
   TEST_TYPE=arithmetic
   TRIGGER_CUSTOM=notify-send --urgency=critical "$EVENT_NAME" "/tmp is >= 10M in size!"
 
-.. Here is a sample event file:
-
 **TEST_TYPE** options:
 
 ::
