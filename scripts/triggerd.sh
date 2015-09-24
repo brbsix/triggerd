@@ -151,7 +151,7 @@ elif (( $# == 1 )) && [[ $1 =~ ^(-h|--help)$ ]]; then
 fi
 
 events=()
-for arg in "${@}"; do
+for arg in "$@"; do
     if [[ $arg = --verbose ]]; then
         option_verbose=1
     elif [[ $arg = --verify ]]; then
