@@ -25,7 +25,7 @@ setup(
     data_files=[('share/triggerd/examples', ['examples/event.txt', 'examples/triggers.conf'])],
     install_requires=['batchpath', 'configobj'],
     entry_points={
-        'console_scripts': ['triggerd=triggerd:main'],
+        'console_scripts': ['triggerd=triggerd:main']
     },
     classifiers=[
         'Development Status :: 4 - Beta',
@@ -50,6 +50,6 @@ setup(
         'Topic :: System',
         'Topic :: System :: Monitoring',
         'Topic :: System :: Systems Administration',
-        'Topic :: Utilities',
-    ],
+        'Topic :: Utilities'
+    ]
 )
