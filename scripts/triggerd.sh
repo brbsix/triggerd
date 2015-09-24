@@ -263,10 +263,10 @@ for event_file in "${events[@]}"; do
     if hash bash-config &>/dev/null; then
         bash-config "$event_file" STATUS triggered &>/dev/null
     else
-        sed -i 's/STATUS=enabled/STATUS=triggered/;s/STATUS = enabled/STATUS = triggered/' "$event_file"
+        sed -i 's/^STATUS=enabled$/STATUS=triggered/;s/^STATUS = enabled$/STATUS = triggered/' "$event_file"
     fi
 
-    if grep -Eq '(STATUS=triggered|STATUS = triggered)' "$event_file" &>/dev/null; then
+    if grep -Eq '^(STATUS=triggered|STATUS = triggered)$' "$event_file" &>/dev/null; then
         eventlog INFO "${event[FILENAME]}" "Event file STATUS successfully updated to triggered"
     else
         eventlog ERROR "${event[FILENAME]}" "Event file STATUS unsuccessfully updated to triggered!"
