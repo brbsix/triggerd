@@ -31,6 +31,8 @@ logger(){
 }
 
 loghandler(){
+    local loglevel setlevel
+
     if [[ $2 = ERROR ]]; then
         loglevel=40
     elif [[ $2 = WARNING ]]; then
