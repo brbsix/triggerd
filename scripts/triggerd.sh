@@ -160,9 +160,9 @@ for arg in "$@"; do
         events+=("$arg")
     elif [[ -d $arg ]]; then
         if [[ -r $arg ]]; then
-            while IFS= read -r line; do
+            while IFS= read -rd $'\0' line; do
                 events+=("$line")
-            done < <(find "$arg" \( -empty -name '.*' -prune \) -o \( -name '*.conf' -o -name '*.txt' -print -type f -writable \))
+            done < <(find "$arg" -type f -writable \( -name '*.conf' -o -name '*.txt' \) ! -empty ! -name '.*' -print0)
         else
             logger ERROR "Skipping '$arg' directory (no read access)"
         fi
