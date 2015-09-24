@@ -578,14 +578,14 @@ def _parser(args):
         help='indicate a trigger config file to '
              'be used (default: %s)' % config)
     parser.add_argument(
+        '-l', '--log',
+        dest='logfile',
+        help='indicate log file destination')
+    parser.add_argument(
         '--debug',
         action='store_true',
         dest='debug',
         help='set the logging level to debug')
-    parser.add_argument(
-        '-l', '--log',
-        dest='logfile',
-        help='indicate log file destination')
     parser.add_argument(
         '--verbose',
         action='store_true',
