@@ -210,7 +210,7 @@ for event_file in "${events[@]}"; do
         fi
     elif [[ ${event[TEST_TYPE]} = content ]]; then
         if [[ ${event[MATCH_CRITERIA]} = contains ]]; then
-            grep -q "${event[MATCH_CONTENT]}" <<<"${event[command_output]}" &>/dev/null
+            grep -Fq "${event[MATCH_CONTENT]}" <<<"${event[command_output]}" &>/dev/null
             if (( $? == 0 )); then
                 event[triggered]=1
             elif (( $? > 1 )); then
