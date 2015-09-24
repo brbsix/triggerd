@@ -55,9 +55,12 @@ loghandler(){
 }
 
 prepare_trigger(){
-    # allow us to use $EVENT_NAME rather than ${event[EVENT_NAME]} in custom/defined triggers
+    # allow us to use $EVENT_NAME and $MATCH_CONTENT rather than
+    # ${event[EVENT_NAME]} and ${event[MATCH_CONTENT]} respectively
+    # in custom/defined triggers
     unset EVENT_NAME
     EVENT_NAME=${event[EVENT_NAME]}
+    MATCH_CONTENT=${event[MATCH_CONTENT]}
 
     if [[ -n ${event[TRIGGER_CUSTOM]} ]]; then
         event[trigger]=${event[TRIGGER_CUSTOM]}
