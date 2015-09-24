@@ -72,12 +72,12 @@ Here is a sample event file that triggers when *google.com* is not accessible vi
 ::
 
   COMMAND=curl -sL google.com
-  EVENT_NAME=Google Accessibility
+  EVENT_NAME=Google Availability
   MATCH_CONTENT=0
   MATCH_CRITERIA=ne
   STATUS=enabled
   TEST_TYPE=status
-  TRIGGER_CUSTOM=notify-send --urgency=critical "$EVENT_NAME" "Google is not accessible!"
+  TRIGGER_CUSTOM=notify-send --urgency=critical "$EVENT_NAME" "Google is not available!"
 
 Here is a sample event file that triggers when the *google.com* homepage source code contains the word *surprise*:
 
