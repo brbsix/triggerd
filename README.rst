@@ -63,7 +63,9 @@ The --verbose option can be used to display execution details:
 Event Files
 ===========
 
-FYI: Basic documentation (sample event file and trigger template file) is installed to *$PREFIX/share/triggerd/examples*
+*Please note: Event files are parsed manually, they are not 'sourced' by the shell. Contents are executed by the shell exactly as they appear.*
+
+Basic documentation (sample event file and trigger template file) is installed to *$PREFIX/share/triggerd/examples*
 
 Here is a sample event file that triggers when *google.com* is not accessible via ``curl``:
 
