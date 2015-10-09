@@ -382,12 +382,11 @@ class EventHandler:
 
             missing = [f for f in required if not self.data.get(f)]
 
-            try:
-                # ensure MATCH_CONTENT exists (unless MATCH_CRITERIA is null or not_null)
-                assert self.data.get('MATCH_CONTENT') is not None or \
-                    re.search('^(not_)?null$', self.data.get('MATCH_CRITERIA')) \
-                    is not None
-            except AssertionError:
+            # ensure MATCH_CONTENT exists
+            # (unless MATCH_CRITERIA is null or not_null)
+            if self.data.get('MATCH_CONTENT') is None and \
+                re.search('^(not_)?null$',
+                          self.data.get('MATCH_CRITERIA')) is None:
                 missing.append('MATCH_CONTENT')
 
             # identify missing mandatory fields
@@ -395,10 +394,8 @@ class EventHandler:
                 log.error("Missing %s", ' '.join(missing), extra=self.__dict__)
                 problems += 1
 
-            try:
-                # ensure TEST_TYPE is a valid test type
-                assert self.data.get('TEST_TYPE') in test_types
-            except AssertionError:
+            # ensure TEST_TYPE is a valid test type
+            if self.data.get('TEST_TYPE') not in test_types:
                 log.error("Invalid TEST_TYPE", extra=self.__dict__)
                 problems += 1
 
@@ -415,11 +412,8 @@ class EventHandler:
                         "operations", extra=self.__dict__)
                     problems += 1
 
-                try:
-                    # ensure MATCH_CRITERIA is an arithmetic operation
-                    assert self.data.get('MATCH_CRITERIA') in \
-                        arithmetic_criteria
-                except AssertionError:
+                # ensure MATCH_CRITERIA is an arithmetic operation
+                if self.data.get('MATCH_CRITERIA') not in arithmetic_criteria:
                     log.error(
                         "Invalid MATCH_CRITERIA for arithmetic operations",
                         extra=self.__dict__)
@@ -428,10 +422,8 @@ class EventHandler:
             # perform verification for content tests
             elif self.data.get('TEST_TYPE') == 'content':
 
-                try:
-                    # ensure MATCH_CRITERIA is a content operation
-                    assert self.data.get('MATCH_CRITERIA') in content_criteria
-                except AssertionError:
+                # ensure MATCH_CRITERIA is a content operation
+                if self.data.get('MATCH_CRITERIA') not in content_criteria:
                     log.error("Invalid MATCH_CRITERIA for content operations",
                               extra=self.__dict__)
                     problems += 1
