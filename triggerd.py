@@ -429,7 +429,8 @@ class EventHandler:
                     problems += 1
 
             # ensure custom and named triggers are not used concurrently
-            if self.data.get('TRIGGER_CUSTOM') and self.data.get('TRIGGER_NAMED'):
+            if self.data.get('TRIGGER_CUSTOM') and \
+               self.data.get('TRIGGER_NAMED'):
                 log.error(
                     "TRIGGER_CUSTOM and TRIGGER_NAMED are both indicated "
                     "(choose one or neither)", extra=self.__dict__)
