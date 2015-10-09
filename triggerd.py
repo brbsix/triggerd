@@ -10,7 +10,9 @@ __version__ = '0.5.3'
 
 
 class EventHandler:
+
     """Execute or verify event files."""
+
     def __init__(self,
                  paths,
                  config=None,
@@ -27,7 +29,9 @@ class EventHandler:
             action(path, config)
 
     class EventFile:
+
         """Manipulate event file."""
+
         def __init__(self, path, config=None):
 
             import configobj
@@ -48,7 +52,9 @@ class EventHandler:
                                     .format(os.environ['HOME'], __program__)
 
         class TriggerFile:
+
             """Manipulate event trigger configuration."""
+
             def __init__(self, event):
                 """Configure trigger."""
 
@@ -447,7 +453,9 @@ class EventHandler:
             return problems == 0
 
     class EventRunner:
+
         """Execute event file."""
+
         def __init__(self, path, config=None):
 
             log = logging.getLogger('event')
@@ -474,7 +482,9 @@ class EventHandler:
                 trigger.execute()
 
     class EventVerifier:
+
         """Verify event file."""
+
         def __init__(self, path, config=None):
 
             log = logging.getLogger('event')
