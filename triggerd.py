@@ -608,13 +608,12 @@ def _parser(args):
         action='version',
         version='{0} {1}'.format(__program__, __version__))
     parser.add_argument(
-        action='append',
         dest='targets',
         help=argparse.SUPPRESS,
         nargs='*')
 
     options = parser.parse_args(args)
-    arguments = options.targets[0]
+    arguments = options.targets
 
     return options, arguments
 
