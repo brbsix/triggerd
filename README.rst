@@ -1,5 +1,5 @@
-About
-=====
+triggerd
+--------
 
 triggerd is a sysadmin/automation tool used to trigger an event or notification upon the output of a command.
 
