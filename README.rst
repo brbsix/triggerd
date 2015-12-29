@@ -1,6 +1,15 @@
 triggerd
 --------
 
+.. image:: https://img.shields.io/pypi/v/triggerd.svg
+  :target: https://pypi.python.org/pypi/triggerd
+
+.. image:: https://img.shields.io/pypi/l/triggerd.svg
+  :target: https://pypi.python.org/pypi/triggerd
+
+.. image:: https://img.shields.io/pypi/dm/triggerd.svg
+  :target: https://pypi.python.org/pypi/triggerd
+
 triggerd is a sysadmin/automation tool used to trigger an event or notification upon the output of a command.
 
 An event file containing the trigger criteria is created. Ideally, you'll create a cron entry or systemd timer to execute ``triggerd EVENTFOLDER`` at a regular interval. If the command status or output matches the trigger criteria, a trigger event or notification is executed and the event file is marked triggered.
