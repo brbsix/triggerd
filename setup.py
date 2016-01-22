@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from setuptools import setup
-from triggerd import __program__
-from triggerd import __version__
+from triggerd import __program__, __version__
 
 
 def read(filename):
