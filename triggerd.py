@@ -589,7 +589,7 @@ def _parser(args):
     parser.add_argument(
         '--parallel', '--no-parallel',
         action=NegateAction,
-        default=True,
+        default=None,
         dest='parallel',
         help='execute events in parallel (default)',
         nargs=0)
@@ -669,9 +669,7 @@ def eventhandler(paths,
     # configure event logger
     _eventlogger(logfile, loglevel)
 
-    action = EventVerifier if verify else EventRunner
-
-    if parallel:
+    if not verify and parallel:
 
         # from multiprocessing import Pool, cpu_count
         import concurrent.futures
@@ -685,7 +683,7 @@ def eventhandler(paths,
         # use closure to permit use of wrapper with one argument
         # DEBUG: ensure config is accessible during runtime
         def wrapper(path):
-            action(path, config)
+            EventRunner(path, config)
 
         # pool = Pool(processes=workers)
         # pool.map(wrapper, paths)
@@ -694,6 +692,8 @@ def eventhandler(paths,
             executor.map(wrapper, paths)
 
     else:
+
+        action = EventVerifier if verify else EventRunner
 
         for path in paths:
             action(path, config)
@@ -745,6 +745,15 @@ def main(args=None):
 
     events = generate_paths(arguments)
 
+    if not events:
+        log.error("You have not supplied any valid targets")
+        log.error("Try '%s --help' for more information.", __program__)
+        sys.exit(1)
+    elif options.verify and options.parallel:
+        log.warning("Ignoring use of '--parallel' as it may slow verification")
+    elif not options.verify and options.parallel is None:
+        options.parallel = True
+
     log.info('processing %s events', len(events))
     log.debug('events = %s', events)
     log.debug('verify = %s', options.verify)
@@ -752,13 +761,6 @@ def main(args=None):
     log.debug('logfile = %s', options.logfile)
     log.debug('loglevel = %s', options.loglevel)
     log.debug('parallel = %s', options.parallel)
-
-    if not events:
-        log.error("You have not supplied any valid targets")
-        log.error("Try '%s --help' for more information.", __program__)
-        sys.exit(1)
-    elif options.verify and options.parallel:
-        log.warning("Ignoring use of '--parallel' as it may slow verification")
 
     eventhandler(events,
                  options.config,
