@@ -60,16 +60,16 @@ class EventFile:
                       "event[MATCH_CONTENT]=$MATCH_CONTENT\n" \
                       "{2}"
 
-            trigger = "notify-send --icon=notification-message-im " \
-                      "--urgency=critical 'triggerd: {0}' 'We have " \
-                      "a trigger event!'"
+            trigger = """notify-send --icon=notification-message-im """ \
+                      """--urgency=critical "triggerd: $EVENT_NAME" """ \
+                      """'We have a trigger event!'"""
 
             event_name = self.event.data.get('EVENT_NAME')
             match_content = self.event.data.get('MATCH_CONTENT')
             trigger_custom = self.event.data.get('TRIGGER_CUSTOM')
             trigger_named = self.event.data.get('TRIGGER_NAMED')
 
-            self.default_string = trigger.format(event_name)
+            self.default_string = trigger
             self.trigger_string = None
 
             if trigger_custom:
@@ -99,7 +99,8 @@ class EventFile:
 
             # resort to default trigger
             if self.trigger_string is None:
-                self.trigger_string = self.default_string
+                self.trigger_string = default.format(
+                        event_name, match_content, self.default_string)
                 log.warning(
                     "No trigger configured (will use default)",
                     extra=self.event.__dict__)
