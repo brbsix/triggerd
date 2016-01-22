@@ -73,9 +73,8 @@ class EventFile:
             self.trigger_string = None
 
             if trigger_custom:
-                self.trigger_string = default.format(event_name,
-                                                     match_content,
-                                                     trigger_custom)
+                self.trigger_string = default.format(
+                    event_name, match_content, trigger_custom)
                 log.info(
                     "Configured to use TRIGGER_CUSTOM (%s)",
                     trigger_custom, extra=self.event.__dict__)
