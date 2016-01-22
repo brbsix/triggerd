@@ -546,15 +546,10 @@ def _getstatusoutput(args):
     return status, output
 
 
-def _parser(args):
+def _parser(args, config):
     """Parse script arguments and options."""
     import argparse
     import os
-
-    config = os.path.join(
-        os.environ.get('XDG_CONFIG_DIR') or
-        os.path.join(os.environ.get('HOME'), '.config'),
-        __program__, 'triggers.conf')
 
     class SmartFormatter(argparse.HelpFormatter):
         """Permit the use of raw text in help messages with 'r|' prefix."""
@@ -591,10 +586,10 @@ def _parser(args):
         usage='%(prog)s [OPTION] <event files|folders>')
     parser.add_argument(
         '-f', '--file',
-        default=config,
         dest='config',
         help='r|indicate trigger config file\n'
-             'Default: %s' % config)
+             'Default: %s' % config,
+        type=argparse.FileType())
     parser.add_argument(
         '-h', '--help',
         action='help',
@@ -744,9 +739,18 @@ def generate_paths(paths):
 def main(args=None):
     """Start and configure application."""
 
+    import os
     import sys
 
-    options, arguments = _parser(args)
+    config = os.path.join(
+        os.environ.get('XDG_CONFIG_DIR') or
+        os.path.join(os.environ.get('HOME'), '.config'),
+        __program__, 'triggers.conf')
+
+    options, arguments = _parser(args, config)
+
+    # determine trigger config file
+    options.config = config if options.config is None else options.config.name
 
     # determine log level
     options.loglevel = logging.DEBUG if options.debug else logging.INFO if \
