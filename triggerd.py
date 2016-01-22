@@ -331,7 +331,7 @@ class EventFile:
         return self.data.get('STATUS') == 'enabled'
 
     def test(self):
-        "Execute and evaluate output of COMMAND per TEST_TYPE."""
+        """Execute and evaluate output of COMMAND per TEST_TYPE."""
 
         status, output = _getstatusoutput(self.data.get('COMMAND'))
 
