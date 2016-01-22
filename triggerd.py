@@ -7,6 +7,8 @@ import logging
 
 __program__ = 'triggerd'
 __version__ = '0.5.3'
+__description__ = 'Trigger an event or notification ' \
+                  'upon the output of a command.'
 
 
 class EventHandler:
@@ -571,8 +573,7 @@ def _parser(args):
 
     parser = argparse.ArgumentParser(
         add_help=False,
-        description='Trigger an event or notification upon the output '
-                    'of a command.',
+        description=__description__,
         usage='%(prog)s [OPTION] <event files|folders>')
     parser.add_argument(
         '-f', '--file',

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from setuptools import setup
-from triggerd import __program__, __version__
+from triggerd import __description__, __program__, __version__
 
 
 def read(filename):
@@ -14,7 +14,7 @@ setup(
     version=__version__,
     author='Brian Beffa',
     author_email='brbsix@gmail.com',
-    description='Trigger an event or notification upon the output of a command',
+    description=__description__,
     long_description=read('README.rst'),
     url='https://github.com/brbsix/triggerd',
     license='GPLv3',
