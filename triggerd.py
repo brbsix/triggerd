@@ -573,8 +573,8 @@ def _parser(args, config):
             return value
 
         try:
-            open(value)
-            return value
+            with open(value) as file:
+                return file.name
         except:
             raise argparse.ArgumentTypeError(
                 "invalid path value: '%s'" % value)
@@ -635,6 +635,9 @@ def _parser(args, config):
 
     options = parser.parse_args(args)
     arguments = options.targets
+
+    if options.config is not None:
+        options.config.close()
 
     return options, arguments
 
