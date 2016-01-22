@@ -166,9 +166,9 @@ i.e. ``TRIGGER_CUSTOM=notify-send "Trigger Notification"``
 
 i.e. ``TRIGGER_NAMED=special``
 
-The trigger templates may be defined in ``$HOME/.config/scripts/triggerd/triggers.conf``
+The trigger templates may be defined in ``$HOME/.config/triggerd/triggers.conf``
 
-ie. ``special=notify-send --icon=~/.config/scripts/triggerd/icons/special.png --urgency=critical "triggerd: $EVENT_NAME" "special event was triggered!"``
+ie. ``special=notify-send --icon=~/.config/triggerd/icons/special.png --urgency=critical "triggerd: $EVENT_NAME" "special event was triggered!"``
 
 The event name can be referenced in either trigger as ``$EVENT_NAME``. The same goes for ``$MATCH_CONTENT``.
 
