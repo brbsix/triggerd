@@ -671,12 +671,12 @@ def main(args=None):
                                    minsize=0,
                                    recursion=True)
 
-    log.info("processing %s events", len(events))
-    log.debug("events = %s", events)
-    log.debug("verify = %s", options.verify)
-    log.debug("triggerfile = %s", options.config)
-    log.debug("logfile = %s", options.logfile)
-    log.debug("loglevel = %s", options.loglevel)
+    log.info('processing %s events', len(events))
+    log.debug('events = %s', events)
+    log.debug('verify = %s', options.verify)
+    log.debug('triggerfile = %s', options.config)
+    log.debug('logfile = %s', options.logfile)
+    log.debug('loglevel = %s', options.loglevel)
 
     if not events:
         log.error("You have not supplied any valid targets")
