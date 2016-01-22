@@ -571,16 +571,26 @@ def _parser(args):
     config = '{0}/.config/scripts/{1}/triggers.conf' \
              .format(os.environ['HOME'], __program__)
 
+    class SmartFormatter(argparse.HelpFormatter):
+        """Permit the use of raw text in help messages with 'r|' prefix."""
+
+        def _split_lines(self, text, width):
+            """argparse.RawTextHelpFormatter._split_lines"""
+            if text.startswith('r|'):
+                return text[2:].splitlines()
+            return argparse.HelpFormatter._split_lines(self, text, width)
+
     parser = argparse.ArgumentParser(
         add_help=False,
         description=__description__,
+        formatter_class=SmartFormatter,
         usage='%(prog)s [OPTION] <event files|folders>')
     parser.add_argument(
         '-f', '--file',
         default=config,
         dest='config',
-        help='indicate a trigger config file to '
-             'be used (default: %s)' % config)
+        help='r|indicate trigger config file\n'
+             'Default: %s' % config)
     parser.add_argument(
         '-l', '--log',
         dest='logfile',
