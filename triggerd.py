@@ -31,8 +31,7 @@ class EventFile:
             self.path, interpolation=False, list_values=False)
 
         # trigger config file path
-        self.config = config or "{0}/.config/scripts/{1}/triggers.conf" \
-                                .format(os.environ['HOME'], __program__)
+        self.config = config
 
     class TriggerFile:
 
