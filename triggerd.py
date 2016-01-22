@@ -551,8 +551,10 @@ def _parser(args):
     import argparse
     import os
 
-    config = '{0}/.config/scripts/{1}/triggers.conf' \
-             .format(os.environ['HOME'], __program__)
+    config = os.path.join(
+        os.environ.get('XDG_CONFIG_DIR') or
+        os.path.join(os.environ.get('HOME'), '.config'),
+        __program__, 'triggers.conf')
 
     class SmartFormatter(argparse.HelpFormatter):
         """Permit the use of raw text in help messages with 'r|' prefix."""
