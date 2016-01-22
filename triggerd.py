@@ -571,6 +571,18 @@ def _parser(args):
         def __call__(self, parser, namespace, values, option_string=None):
             setattr(namespace, self.dest, option_string[2:4] != 'no')
 
+    def path(value):
+        """Ensure path is a directory or file-like object."""
+        if os.path.isdir(value):
+            return value
+
+        try:
+            open(value)
+            return value
+        except:
+            raise argparse.ArgumentTypeError(
+                "invalid path value: '%s'" % value)
+
     parser = argparse.ArgumentParser(
         add_help=False,
         description=__description__,
@@ -622,7 +634,8 @@ def _parser(args):
     parser.add_argument(
         dest='targets',
         help=argparse.SUPPRESS,
-        nargs='*')
+        nargs='*',
+        type=path)
 
     options = parser.parse_args(args)
     arguments = options.targets
