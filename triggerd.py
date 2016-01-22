@@ -538,9 +538,10 @@ def _getstatusoutput(args):
                                executable='bash',
                                shell=True,
                                stderr=subprocess.PIPE,
-                               stdout=subprocess.PIPE)
+                               stdout=subprocess.PIPE,
+                               universal_newlines=True)
 
-    output = process.stdout.read().decode().strip()
+    output = process.stdout.read().strip()
     status = process.wait()
 
     return status, output
