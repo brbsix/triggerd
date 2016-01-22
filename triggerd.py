@@ -592,32 +592,36 @@ def _parser(args):
         help='r|indicate trigger config file\n'
              'Default: %s' % config)
     parser.add_argument(
-        '-l', '--log',
-        dest='logfile',
-        help='indicate log file destination')
+        '-h', '--help',
+        action='help',
+        help=argparse.SUPPRESS)
     parser.add_argument(
-        '--debug',
-        action='store_true',
-        dest='debug',
-        help='set the logging level to debug')
-    parser.add_argument(
-        '--verbose',
-        action='store_true',
-        dest='verbose',
-        help='set the logging level to verbose')
     parser.add_argument(
         '--verify',
         action='store_true',
         dest='verify',
         help='verify event files without execution')
     parser.add_argument(
-        '-h', '--help',
-        action='help',
-        help=argparse.SUPPRESS)
-    parser.add_argument(
         '--version',
         action='version',
         version='{0} {1}'.format(__program__, __version__))
+
+    group = parser.add_argument_group('logging options')
+    group.add_argument(
+        '--debug',
+        action='store_true',
+        dest='debug',
+        help='set the logging level to debug')
+    group.add_argument(
+        '-l', '--log',
+        dest='logfile',
+        help='set log file destination')
+    group.add_argument(
+        '--verbose',
+        action='store_true',
+        dest='verbose',
+        help='set the logging level to verbose')
+
     parser.add_argument(
         dest='targets',
         help=argparse.SUPPRESS,
