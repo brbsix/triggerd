@@ -21,7 +21,7 @@ setup(
     keywords=['automation', 'cron', 'monitoring', 'trigger', 'triggering'],
     py_modules=['triggerd'],
     scripts=['scripts/bash-config', 'scripts/triggerd.sh'],
-    install_requires=['batchpath', 'configobj'],
+    install_requires=['configobj'],
     data_files=[
         ('share/triggerd/examples',
          ['examples/event.txt', 'examples/triggers.conf'])

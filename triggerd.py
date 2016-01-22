@@ -699,12 +699,38 @@ def eventhandler(paths,
             action(path, config)
 
 
+def generate_paths(paths):
+    """
+    Iterates over `paths` (which may consist of files and/or directories)
+    and return list of files.
+    """
+
+    import os
+    import subprocess
+
+    files = []
+    for path in paths:
+        if os.path.isdir(path):
+            files += sorted(subprocess.check_output(
+                ['find', path,
+                 '-type', 'f',
+                 '-readable',
+                 '-writable',
+                 '!', '-empty',
+                 '(', '-name', '*.conf', '-o', '-name', '*.txt', ')',
+                 '-print0'],
+                stderr=subprocess.DEVNULL,
+                universal_newlines=True).rstrip('\0').split('\0'))
+        else:
+            files.append(path)
+
+    return files
+
+
 def main(args=None):
     """Start and configure application."""
 
-    import os
     import sys
-    from batchpath import GeneratePaths
 
     options, arguments = _parser(args)
 
@@ -717,11 +743,7 @@ def main(args=None):
 
     log = logging.getLogger(__program__)
 
-    events = GeneratePaths().files(arguments,
-                                   access=os.W_OK,
-                                   extensions=['conf', 'txt'],
-                                   minsize=0,
-                                   recursion=True)
+    events = generate_paths(arguments)
 
     log.info('processing %s events', len(events))
     log.debug('events = %s', events)
