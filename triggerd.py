@@ -609,7 +609,7 @@ def _parser(args, config):
     parser.add_argument(
         '--version',
         action='version',
-        version='{0} {1}'.format(__program__, __version__))
+        version='%(prog)s ' + __version__)
 
     group = parser.add_argument_group('logging options')
     group.add_argument(
