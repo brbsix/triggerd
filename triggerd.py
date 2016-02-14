@@ -522,11 +522,17 @@ def _getstatus(args):
     """Execute bash command returning exit status."""
     import subprocess
 
-    return subprocess.call(args,
-                           executable='bash',
-                           shell=True,
-                           stderr=subprocess.PIPE,
-                           stdout=subprocess.PIPE)
+    try:
+        return subprocess.call(args,
+                               executable='bash',
+                               shell=True,
+                               stderr=subprocess.PIPE,
+                               stdout=subprocess.PIPE,
+                               timeout=20)
+    except subprocess.TimeoutExpired:
+        log = logging.getLogger(__program__)
+        log.error("Timed out executing '%s'", args)
+        return 1
 
 
 def _getstatusoutput(args):
@@ -540,8 +546,15 @@ def _getstatusoutput(args):
                           stdout=subprocess.PIPE,
                           universal_newlines=True) as process:
 
+        try:
+            status = process.wait(timeout=20)
+        except subprocess.TimeoutExpired:
+            log = logging.getLogger(__program__)
+            log.error("Timed out executing '%s'", args)
+            process.kill()
+            status = process.wait()
+
         output = process.stdout.read().strip()
-        status = process.wait()
 
         return status, output
 
