@@ -533,17 +533,17 @@ def _getstatusoutput(args):
     """Execute bash command returning output and exit status."""
     import subprocess
 
-    process = subprocess.Popen(args,
-                               executable='bash',
-                               shell=True,
-                               stderr=subprocess.PIPE,
-                               stdout=subprocess.PIPE,
-                               universal_newlines=True)
+    with subprocess.Popen(args,
+                          executable='bash',
+                          shell=True,
+                          stderr=subprocess.PIPE,
+                          stdout=subprocess.PIPE,
+                          universal_newlines=True) as process:
 
-    output = process.stdout.read().strip()
-    status = process.wait()
+        output = process.stdout.read().strip()
+        status = process.wait()
 
-    return status, output
+        return status, output
 
 
 def _parser(args, config):
