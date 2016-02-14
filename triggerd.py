@@ -700,7 +700,7 @@ def eventhandler(paths,
         import concurrent.futures
         from multiprocessing import cpu_count
 
-        workers = cpu_count() * 4
+        workers = cpu_count()
 
         # define in global namespace to ensure it can be pickled
         global wrapper
